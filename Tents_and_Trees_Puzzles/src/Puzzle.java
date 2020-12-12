@@ -21,6 +21,7 @@ public class Puzzle {
 		}
 	}
 	
+	// source: https://riptutorial.com/csv/example/27605/reading-and-writing-in-java
 	private List<String[]> readFromCsvFile(String separator, String fileName) {
 	    try (BufferedReader reader = new BufferedReader(new FileReader(fileName))){
 	        List<String[]> list = new ArrayList<>();
