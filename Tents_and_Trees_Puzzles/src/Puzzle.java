@@ -36,5 +36,14 @@ public class Puzzle {
 	        return null;
 	    }  
 	}
+	
+	public void printPuzzle() {
+		for (int i = 0; i < puzzle.length; i++) {
+			for (int j = 0; j < puzzle[i].length; j++) {
+				System.out.print(puzzle[i][j] + "\t");
+			}
+			System.out.println("\n\n");
+		}
+	}
 
 }
