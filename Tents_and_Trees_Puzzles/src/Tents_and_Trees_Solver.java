@@ -1,12 +1,10 @@
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 public class Tents_and_Trees_Solver {
 	private Puzzle p;
 	
-	private Map<int[], Tree> allTrees = new HashMap<>(); // key: tree position, value: tree
-	private Stack<Tree> treesWithAssinedTent = new Stack<>(); // stack for backtrack
+	private Stack<Node> currentPath = new Stack<>(); // stack for backtrack
+	private Node currentNode;
 	
 	
 	public Tents_and_Trees_Solver(String fileName) {
