@@ -45,6 +45,44 @@ public class Puzzle {
 			System.out.println("\n\n");
 		}
 	}
+	
+	public void setGrassForSquaresWithNoAvailableTree() {
+		for (int i = 1; i < puzzle.length - 1; i++) {
+			for (int j = 1; j < puzzle[i].length - 1; j++) {
+				if (!puzzle[i][j].equals("")) {
+						continue;
+				}
+				boolean treeAbove = false;
+				if (i > 1) {
+					if (puzzle[i-1][j].equals("t")) {
+						treeAbove = true;
+					}
+				}
+				boolean treeBelow = false;
+				if (i < puzzle.length) {
+					if (puzzle[i+1][j].equals("t")) {
+						treeBelow = true;
+					}
+				}
+				boolean treeToTheLeft = false;
+				if (j > 1) {
+					if (puzzle[i][j-1].equals("t")) {
+						treeToTheLeft = true;
+					}
+				}
+				boolean treeToTheRight = false;
+				if (j < puzzle[i].length) {
+					if (puzzle[i][j+1].equals("t")) {
+						treeToTheRight = true;
+					}
+				}
+				if (treeToTheLeft || treeToTheRight || treeAbove || treeBelow) {
+					continue;
+				}
+				puzzle[i][j] = "g";
+			}
+		}
+	}
 
 	public void markZeroes() {
 		List<Integer> indexOfZeroVert = new ArrayList<>();
