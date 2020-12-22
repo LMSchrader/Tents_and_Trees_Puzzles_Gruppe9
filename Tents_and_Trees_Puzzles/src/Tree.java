@@ -9,4 +9,24 @@ public class Tree {
 	public Tree(int[] pos) {
 		position = pos;
 	}
+
+	public int[] getPosition() {
+		return position;
+	}
+
+	public void deleteFromDomain(int[] tentPos) {
+		domain.remove(tentPos);
+	}
+	
+	public List<int[]> getDomain() {
+		return domain;
+	}
+
+	public int[] getCurrentTentPosition() {
+		return currentTentPosition;
+	}
+
+	public void setCurrentTentPosition(int[] currentTentPosition) {
+		this.currentTentPosition = currentTentPosition;
+	}
 }
