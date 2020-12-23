@@ -1,11 +1,12 @@
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 
 public class Tents_and_Trees_Solver {
-	private Puzzle puzzle; // saves the unsolved puzzle with preprocessing
-	private Puzzle solvedPuzzle; // saves the solved or partially solved puzzle ()
-	
+	private Puzzle puzzle;	
 	private Stack<Node> currentPath = new Stack<>(); // stack for backtrack
 	private Node currentNode;
 	
@@ -20,37 +21,37 @@ public class Tents_and_Trees_Solver {
 		puzzle.printPuzzle();
 		preprocessing();
 		
-//		TODO: define variables (in currentNode) and constraints
-		currentNode = new Node();
-//		TODO: preprocessing % e.g. arc-consistency
+		currentNode = createFirstNode(); // define variables 
+		// TODO: define constraints
+		
+		//	TODO: preprocessing % e.g. arc-consistency
 		while (currentNode.hasUninstantiatedTrees()) {
-			// create a new node based on the old currentNode to build path (currentPath)
-			currentPath.push(currentNode);
-			Node newNode = new Node(currentNode);
-			currentNode = newNode;
-			
 			Tree t = selectTree(); // select variable
 			if (t.getDomain().isEmpty()) {
 				backtrack();
-				generateNewSolvedPuzzle();
 			} else {
-				int[] tentPos = selectTent(t);//select consistent value
-				t.setCurrentTentPosition(tentPos);
+				int[] tentPos = selectTent(t); //select consistent value
+				currentNode.update(t, tentPos);
 				updateSolvedPuzzle();
 				constraintPropagation(); // propagation
 			}
+			
+			// create a new node based on the old currentNode to build path (currentPath)
+			currentPath.push(currentNode);
+			currentNode = new Node(currentNode);
 		}
+		puzzle.printPuzzle();
 	}
 	
 	
-	public void preprocessing() {
+	private void preprocessing() {
 		markZeroes();
 		setGrassForSquaresWithNoAvailableTree();
 		//preprocessing3();
 	}
 	
 	// preprocessing 1
-	public void markZeroes() {
+	private void markZeroes() {
 		String[][] p = puzzle.getPuzzle();
 
 		for (int i = 0; i < puzzle.getColumns(); i++) {
@@ -78,7 +79,7 @@ public class Tents_and_Trees_Solver {
 	
 	
 	// preprocessing 2
-	public void setGrassForSquaresWithNoAvailableTree() {
+	private void setGrassForSquaresWithNoAvailableTree() {
 		String[][] p = puzzle.getPuzzle();
 		for (int i = 1; i < puzzle.getRows(); i++) {
 			for (int j = 1; j < puzzle.getColumns(); j++) {
@@ -122,7 +123,7 @@ public class Tents_and_Trees_Solver {
 	
 	//TODO: preprocessing 3 funktioniert nicht mit aktueller Datenstruktur
 	//preprocessing 3
-	public void preprocessing3() {
+	private void preprocessing3() {
 		for (int i = 1; i < puzzle.getRows(); i++) {
 			int numberOfMinssingTents = puzzle.numberOfTentsThatShouldBeInRow(i) - puzzle.countNumberOfXInRow(i, "^");
 			if (puzzle.countNumberOfXInRow(i, "") == numberOfMinssingTents) {
@@ -141,7 +142,7 @@ public class Tents_and_Trees_Solver {
 	}
 
 	
-	public Tree selectTree() {
+	private Tree selectTree() {
 		//TODO: other heuristics
 		// random tree
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
@@ -149,7 +150,7 @@ public class Tents_and_Trees_Solver {
 		return tree;
 	}
 	
-	public int[] selectTent(Tree tree) {
+	private int[] selectTent(Tree tree) {
 		//TODO: other heuristics
 		// random tent
 		List<int[]> tentPos = tree.getDomain();
@@ -157,34 +158,84 @@ public class Tents_and_Trees_Solver {
 	}
 	
 	
-	public void backtrack() {
+	private void backtrack() {
 		int[] treePos;
-		int[] tentPos;
 		
 		do {
-			treePos = currentNode.getUpdatedTree().getPosition();
-			tentPos = currentNode.getUpdatedTree().getCurrentTentPosition();
-			
-			// set previous node as current node and delete tent position from the domain and 
+			// set previous node as current node and delete tent position from the domain of the updated tree
 			currentNode = currentPath.pop();
-			currentNode.getTree(treePos).deleteFromDomain(tentPos);
+			treePos = currentNode.getUpdatedTree().getPosition();
+			undoUpdateSolvedPuzzle();
+			currentNode.undoUpdate();
 		} while (currentNode.getTree(treePos).getDomain().isEmpty());
 	}
 	
-	public void constraintPropagation() {
+	private void constraintPropagation() {
 		//TODO
 	}
 	
 	// after a new tent was set
-	public void updateSolvedPuzzle() {
-		//TODO
-		//solvedPuzzle = ...
+	private void updateSolvedPuzzle() {
+		int[] tentPos= currentNode.getUpdatedTree().getCurrentTentPosition();
+		puzzle.getPuzzle()[tentPos[0]][tentPos[1]] = "^";
 	}
 	
-	// after backtrack
-	public void generateNewSolvedPuzzle() {
-		//TODO
-		//solvedPuzzle = ...
+	// within backtrack
+	private void undoUpdateSolvedPuzzle() {
+		int[] tentPos= currentNode.getUpdatedTree().getCurrentTentPosition();
+		puzzle.getPuzzle()[tentPos[0]][tentPos[1]] = "";
+	}
+	
+	private Node createFirstNode() {
+		Map<int[], Tree> allTrees = new HashMap<>();
+		String[][] p = puzzle.getPuzzle();
+		
+		for (int r = 1; r < puzzle.getRows(); r++) {
+			for (int c = 1; c < puzzle.getColumns(); c++) {
+				String s = p[r][c];
+				if (s.equals("t")) {
+					int[] pos = new int[] {r, c};
+					List<int[]> domain = defineDomain(pos); 
+					Tree t = new Tree(pos, domain);
+					
+					allTrees.put(pos, t);
+				
+				}
+
+			}
+		}
+		
+		return new Node(allTrees);
+	}
+	
+	private List<int[]> defineDomain(int[] posTree) {
+		List<int[]> domain = new ArrayList<>();
+		String[][] p = puzzle.getPuzzle();
+		int r = posTree[0];
+		int c = posTree[1];
+		
+		if (r > 1) {
+			if (p[r-1][c].equals("")) {
+				domain.add(new int[] {r-1, c});
+			}
+		}
+		if (r < puzzle.getRows() - 1) {
+			if (p[r+1][c].equals("")) {
+				domain.add(new int[] {r+1, c});
+			}
+		}
+		if (c > 1) {
+			if (p[r][c-1].equals("")) {
+				domain.add(new int[] {r, c-1});
+			}
+		}
+		if (c < puzzle.getColumns() - 1) {
+			if (p[r][c+1].equals("")) {
+				domain.add(new int[] {r, c+1});
+			}
+		}
+		
+		return domain;
 	}
 
 }

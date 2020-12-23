@@ -26,10 +26,6 @@ public class Puzzle {
 		}
 	}
 	
-	public void setPuzzle(String[][] puzzle) {
-		this.puzzle = puzzle;
-	}
-	
 	// source: https://riptutorial.com/csv/example/27605/reading-and-writing-in-java
 	private List<String[]> readFromCsvFile(String separator, String fileName) {
 	    try (BufferedReader reader = new BufferedReader(new FileReader(fileName))){
@@ -147,15 +143,15 @@ public class Puzzle {
 		return this.puzzle[0].length;
 	}
 	
+	public String[][] getPuzzle() {
+		return puzzle;
+	}
+	
 	private boolean isLegalRowIndex(int row) {
 		return row < getRows() && row > 0;
 	}
 	
 	private boolean isLegalColumnIndex(int column) {
 		return column < getColumns() && column > 0;
-	}
-
-	public String[][] getPuzzle() {
-		return puzzle;
 	}
 }

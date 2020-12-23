@@ -4,13 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 public class Node {
-	// TODO: es kann sein, dass int[] probleme bereiten wird
-	private Map<int[], Tree> allTrees = new HashMap<>(); // key: tree position, value: tree
+	private Map<int[], Tree> allTrees; // key: tree position, value: tree
 	private Tree updatedTree; // for backtrack
 	
 	// only first node
-	public Node() {
-		//TODO
+	public Node(Map<int[], Tree> allTrees) {
+		this.allTrees = allTrees;
 	}
 	
 	public Node(Node priviousNode) {
@@ -38,7 +37,10 @@ public class Node {
 	}
 	
 	private void cloneAllTrees(Node n) {
-		// TODO
+		allTrees = new HashMap<>();
+		for (Map.Entry<int[], Tree> entry : n.getAllTrees().entrySet()) {
+			allTrees.put(entry.getKey(), entry.getValue().clone());
+		}
 	}
 
 	public Map<int[], Tree> getAllTrees() {
@@ -51,5 +53,16 @@ public class Node {
 
 	public Tree getUpdatedTree() {
 		return updatedTree;
+	}
+	
+	public void update(Tree tree, int[] tentPos) {
+		this.updatedTree = tree;
+		tree.setCurrentTentPosition(tentPos);
+		tree.deleteFromDomain(tentPos);
+	}
+	
+	public void undoUpdate() {
+		this.updatedTree.setCurrentTentPosition(null);
+		this.updatedTree = null;
 	}
 }
