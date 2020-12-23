@@ -34,11 +34,11 @@ public class Tents_and_Trees_Solver {
 				currentNode.update(t, tentPos);
 				updateSolvedPuzzle();
 				constraintPropagation(); // propagation
-			}
-			
-			// create a new node based on the old currentNode to build path (currentPath)
-			currentPath.push(currentNode);
-			currentNode = new Node(currentNode);
+				
+				// create a new node based on the old currentNode to build path (currentPath)
+				currentPath.push(currentNode);
+				currentNode = new Node(currentNode);
+			}	
 		}
 		puzzle.printPuzzle();
 	}
