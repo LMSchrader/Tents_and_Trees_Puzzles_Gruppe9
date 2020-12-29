@@ -16,6 +16,10 @@ public class Puzzle {
 		setPuzzle(fileName);
 	}
 	
+	private Puzzle(String[][] puzzle) {
+		this.puzzle = puzzle;
+	}
+	
 	public void setPuzzle(String fileName) {
 		List<String[]> p = readFromCsvFile(",", fileName);
 		
@@ -153,5 +157,69 @@ public class Puzzle {
 	
 	private boolean isLegalColumnIndex(int column) {
 		return column < getColumns() && column > 0;
+	}
+	
+	public Puzzle clone() {
+		return new Puzzle(this.puzzle.clone());
+	}
+	
+	public void markZeroes() {
+		for (int i = 0; i < getColumns(); i++) {
+			if(puzzle[0][i].equals("0")) {
+				for(int a = 1; a < getRows(); a++) {
+					if (puzzle[a][Integer.valueOf(i)].equals("")) {
+						puzzle[a][Integer.valueOf(i)] = "g";
+					}
+				}
+			}
+		}
+		
+		for (int i = 0; i < getRows(); i++) {
+			if(puzzle[i][0].equals("0")) {
+				for(int a = 1; a < getColumns(); a++) {
+					if (puzzle[Integer.valueOf(i)][a].equals("")) {
+						puzzle[Integer.valueOf(i)][a] = "g";
+					}
+				}
+			}
+		}
+	}
+	
+	public void setGrassForSquaresWithNoAvailableTree() {
+		for (int i = 1; i < getRows(); i++) {
+			for (int j = 1; j < getColumns(); j++) {
+				if (!puzzle[i][j].equals("")) {
+						continue;
+				}
+				boolean treeAbove = false;
+				if (i > 1) {
+					if (puzzle[i-1][j].equals("t")) {
+						treeAbove = true;
+					}
+				}
+				boolean treeBelow = false;
+				if (i < getRows() - 1) {
+					if (puzzle[i+1][j].equals("t")) {
+						treeBelow = true;
+					}
+				}
+				boolean treeToTheLeft = false;
+				if (j > 1) {
+					if (puzzle[i][j-1].equals("t")) {
+						treeToTheLeft = true;
+					}
+				}
+				boolean treeToTheRight = false;
+				if (j < getColumns() - 1) {
+					if (puzzle[i][j+1].equals("t")) {
+						treeToTheRight = true;
+					}
+				}
+				if (treeToTheLeft || treeToTheRight || treeAbove || treeBelow) {
+					continue;
+				}
+				puzzle[i][j] = "g";
+			}
+		}
 	}
 }
