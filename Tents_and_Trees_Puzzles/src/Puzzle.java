@@ -107,7 +107,7 @@ public class Puzzle {
 		}
 	}
 	
-	public int numberOfTentsThatShouldBeInCollumn(int column) {
+	public int numberOfTentsThatShouldBeInColumn(int column) {
 		if (isLegalColumnIndex(column)) {
 			return Integer.parseInt(this.puzzle[0][column]);
 		} else {
@@ -160,7 +160,13 @@ public class Puzzle {
 	}
 	
 	public Puzzle clone() {
-		return new Puzzle(this.puzzle.clone());
+		String[][] p = new String[getRows()][getColumns()];
+		for (int i = 0; i < getRows(); i++) {
+			for (int j = 0; j < getColumns(); j++) {
+				p[i][j] = puzzle[i][j];
+			}
+		}
+		return new Puzzle(p);
 	}
 	
 	public void markZeroes() {

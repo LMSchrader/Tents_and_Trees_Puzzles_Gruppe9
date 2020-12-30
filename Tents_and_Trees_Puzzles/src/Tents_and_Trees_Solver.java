@@ -3,7 +3,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Stack;
 
 public class Tents_and_Trees_Solver {
@@ -11,7 +10,9 @@ public class Tents_and_Trees_Solver {
 	private Puzzle updatedPuzzle;
 	private Stack<Node> currentPath = new Stack<>(); // stack for backtrack
 	private Node currentNode;
-	// TODO: define constraints
+	
+	public static int BACKTRACKCOUNT = 0;
+	
 	
 	public Tents_and_Trees_Solver(String fileName) {
 		this.puzzle = new Puzzle(fileName);
@@ -31,13 +32,18 @@ public class Tents_and_Trees_Solver {
 		
 		while (currentNode.hasUninstantiatedTrees()) {
 			Tree t = selectTree(); // select variable
-			if (t.getDomain().isEmpty()) {
+			int[] tentPos = selectTent(t);//select consistent value
+			if (tentPos == null) { // if domain is empty
 				backtrack();
 				createPuzzleFromNode(this.currentNode);
+//				System.out.println("BACKTRACK");
+//				updatedPuzzle.printPuzzle();
 			} else {
-				int[] tentPos = selectTent(t); //select consistent value
 				currentNode.update(t, tentPos);
 				updatePuzzle();
+				constraints(updatedPuzzle);
+//				System.out.println("UPDATE");
+//				updatedPuzzle.printPuzzle();
 				constraintPropagation(); // propagation
 				
 				// create a new node based on the old currentNode to build path (currentPath)
@@ -45,7 +51,9 @@ public class Tents_and_Trees_Solver {
 				currentNode = new Node(currentNode);
 			}	
 		}
+		System.out.println("RESULT");
 		updatedPuzzle.printPuzzle();
+		System.out.println("BACKTRACKCOUNT:" + BACKTRACKCOUNT);
 	}
 	
 	private List<int[]> defineDomain(int[] posTree) {
@@ -102,9 +110,9 @@ public class Tents_and_Trees_Solver {
 	
 	private void preprocessing() {
 		puzzle.markZeroes();
-		puzzle.printPuzzle();
+//		puzzle.printPuzzle();
 		puzzle.setGrassForSquaresWithNoAvailableTree();
-		puzzle.printPuzzle();
+//		puzzle.printPuzzle();
 		//preprocessing3();
 	}
 	
@@ -112,15 +120,24 @@ public class Tents_and_Trees_Solver {
 		//TODO: other heuristics
 		// random tree
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
-		Tree tree = trees.get(new Random().nextInt((trees.size() - 1) + 1));
+		Tree tree = trees.get((int)(Math.random() * ((trees.size() - 1) + 1)));
 		return tree;
 	}
 	
 	private int[] selectTent(Tree tree) {
 		//TODO: other heuristics
 		// random tent
-		List<int[]> tentPos = tree.getDomain();
-		return tentPos.get(new Random().nextInt((tentPos.size() - 1) + 1));
+		int domainSize = tree.getDomain().size();
+		int[] tent;
+		for (int i = 0; i < domainSize; i++) {
+			tent = tree.getDomain().get((int)(Math.random() * ((tree.getDomain().size() - 1) + 1)));
+			if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
+				return tent;
+			} else {
+				tree.deleteFromDomain(tent);
+			}
+		}
+		return null;
 	}
 	
 	
@@ -131,17 +148,22 @@ public class Tents_and_Trees_Solver {
 			// set previous node as current node and delete tent position from the domain of the updated tree
 			currentNode = currentPath.pop();
 			treePos = currentNode.getUpdatedTree().getPosition();
-			// TODO: undoUpdateSolvedPuzzle();
 			currentNode.undoUpdate();
+			BACKTRACKCOUNT++;
 		} while (currentNode.getTree(treePos).getDomain().isEmpty());
 	}
 	
 	private void constraintPropagation() {
 		//TODO
-		setGrassAroundASquareWithATree(updatedPuzzle);
 	}
 	
-	private void setGrassAroundASquareWithATree(Puzzle puzzle) {
+	private void constraints(Puzzle puzzle) {
+		setGrassAroundASquareWithATent(puzzle);
+		fillRowsAndCollumnsWithGrassIfAllTentsHaveBeenSet(puzzle);
+	}
+	
+	// constraint:  No two tents may stand immediately next to each other, not even diagonally. 
+	private void setGrassAroundASquareWithATent(Puzzle puzzle) {
 		String[][] p = puzzle.getPuzzle();
 		for (int i = 1; i < puzzle.getRows(); i++) {
 			for (int j = 1; j < puzzle.getColumns(); j++) {
@@ -157,54 +179,69 @@ public class Tents_and_Trees_Solver {
 				}
 				
 				if (i < puzzle.getRows() - 1) {
-					if (p[i+1][j].equals("t")) {
+					if (p[i+1][j].equals("^")) {
 						p[i][j] = "g";
 						continue;
 					}
 				}
 				
 				if (j > 1) {
-					if (p[i][j-1].equals("t")) {
+					if (p[i][j-1].equals("^")) {
 						p[i][j] = "g";
 						continue;
 					}
 				}
 				
 				if (j < puzzle.getColumns() - 1) {
-					if (p[i][j+1].equals("t")) {
+					if (p[i][j+1].equals("^")) {
 						p[i][j] = "g";
 						continue;
 					}
 				}
 				
 				if (i > 1 && j > 1) {
-					if (p[i-1][j-1].equals("t")) {
+					if (p[i-1][j-1].equals("^")) {
 						p[i][j] = "g";
 						continue;
 					}
 				}
 				
 				if (i < puzzle.getRows() - 1 && j > 1) {
-					if (p[i+1][j-1].equals("t")) {
+					if (p[i+1][j-1].equals("^")) {
 						p[i][j] = "g";
 						continue;
 					}
 				}
 				
 				if (i < puzzle.getRows() - 1 && j < puzzle.getColumns() - 1) {
-					if (p[i+1][j+1].equals("t")) {
+					if (p[i+1][j+1].equals("^")) {
 						p[i][j] = "g";
 						continue;
 					}
 				}
 				
 				if (i > 1 && j < puzzle.getColumns() - 1) {
-					if (p[i-1][j+1].equals("t")) {
+					if (p[i-1][j+1].equals("^")) {
 						p[i][j] = "g";
 						continue;
 					}
 				}
 				
+			}
+		}
+	}
+	
+	// constraint:  There are exactly as many tents in each row or column as the number on the side indicates. 
+	private void fillRowsAndCollumnsWithGrassIfAllTentsHaveBeenSet(Puzzle puzzle) {
+		for (int i = 1; i < puzzle.getRows(); i++) {
+			if (puzzle.countNumberOfXInRow(i, "^") >= puzzle.numberOfTentsThatShouldBeInRow(i)) {
+				puzzle.fillUnknownFieldsofRowWithX(i, "g");
+			}
+		}
+		
+		for (int j = 1; j < puzzle.getColumns(); j++) {
+			if (puzzle.countNumberOfXInColumn(j, "^") >= puzzle.numberOfTentsThatShouldBeInColumn(j)) {
+				puzzle.fillUnknownFieldsofColumnWithX(j, "g");
 			}
 		}
 	}
@@ -219,7 +256,7 @@ public class Tents_and_Trees_Solver {
 		}
 		
 		for (int i = 1; i < puzzle.getColumns(); i++) {
-			int numberOfMinssingTents = puzzle.numberOfTentsThatShouldBeInCollumn(i) - puzzle.countNumberOfXInColumn(i, "^");
+			int numberOfMinssingTents = puzzle.numberOfTentsThatShouldBeInColumn(i) - puzzle.countNumberOfXInColumn(i, "^");
 			if (puzzle.countNumberOfXInColumn(i, "") == numberOfMinssingTents) {
 				puzzle.fillUnknownFieldsofColumnWithX(i, "^");
 			}
@@ -251,7 +288,7 @@ public class Tents_and_Trees_Solver {
 				p[tentPos[0]][tentPos[1]] = "^";
 			}
 		}
-		setGrassAroundASquareWithATree(updatedPuzzle);
+		constraints(updatedPuzzle);
 	}
 
 }

@@ -37,7 +37,9 @@ public class Tree {
 			d.add(p);
 		}
 		Tree t = new Tree(position, d);
-		t.setCurrentTentPosition(currentTentPosition);
+		if (currentTentPosition != null) {
+			t.setCurrentTentPosition(currentTentPosition.clone());
+		}
 		return t;
 	}
 }
