@@ -124,6 +124,44 @@ public class Tents_and_Trees_Solver {
 		return tree;
 	}
 	
+	private Tree selectTreeWithSmallestDomain() {
+		List<Tree> trees = currentNode.getUninstantiatedTrees();
+		int smallestDomain = Integer.MAX_VALUE;
+		Tree treeWithSmallestDomain = null;
+		for (Tree tree: trees) {
+			int domainSize = tree.getDomain().size();
+			if (domainSize < smallestDomain)
+				smallestDomain = domainSize;
+				treeWithSmallestDomain = tree;
+		}
+		return treeWithSmallestDomain;
+	}
+	
+	/*
+	private Tree selectMostConstrainingTree() {
+		List<Tree> trees = currentNode.getUninstantiatedTrees();
+		int maxConstraints = 0;
+		Tree mostConstrainingTree = null;
+		for (Tree tree: trees) {
+			int constraintCount = 0;
+			for (Tree otherTree: trees) {
+				if (otherTree == tree) {
+					continue;
+				}
+				List<int[]> domain = new ArrayList<int[]>(tree.getDomain());
+				List<int[]> otherDomain = new ArrayList<int[]>(otherTree.getDomain());
+				domain.retainAll(otherDomain);
+				constraintCount += domain.size();
+			}
+			if (constraintCount > maxConstraints) {
+				maxConstraints = constraintCount;
+				mostConstrainingTree = tree;
+			}
+		}
+		return mostConstrainingTree;
+	}
+	*/
+	
 	private int[] selectTent(Tree tree) {
 		//TODO: other heuristics
 		// random tent
