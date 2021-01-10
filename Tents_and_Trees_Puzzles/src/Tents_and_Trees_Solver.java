@@ -1,9 +1,5 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Stack;
 
 public class Tents_and_Trees_Solver {
 	private Puzzle puzzle;	
@@ -32,7 +28,9 @@ public class Tents_and_Trees_Solver {
 		
 		while (currentNode.hasUninstantiatedTrees()) {
 			Tree t = selectTree(); // select variable
-			int[] tentPos = selectTent(t);//select consistent value
+
+			//int[] tentPos = selectTent(t);//select consistent value
+			int[] tentPos = selectTentMaxNumber(t);
 			if (tentPos == null) { // if domain is empty
 				backtrack();
 				createPuzzleFromNode(this.currentNode);
@@ -43,7 +41,7 @@ public class Tents_and_Trees_Solver {
 				updatePuzzle();
 				constraints(updatedPuzzle);
 //				System.out.println("UPDATE");
-//				updatedPuzzle.printPuzzle();
+// 				updatedPuzzle.printPuzzle();
 				constraintPropagation(); // propagation
 				
 				// create a new node based on the old currentNode to build path (currentPath)
@@ -114,6 +112,7 @@ public class Tents_and_Trees_Solver {
 		puzzle.setGrassForSquaresWithNoAvailableTree();
 //		puzzle.printPuzzle();
 		//preprocessing3();
+		puzzle.printPuzzle();
 	}
 	
 	private Tree selectTree() {
@@ -138,6 +137,96 @@ public class Tents_and_Trees_Solver {
 			}
 		}
 		return null;
+	}
+
+	private int[] selectTentMaxNumber(Tree tree) {
+		String[][] p = puzzle.getPuzzle();
+
+		int row = tree.getPosition()[0];
+		int column = tree.getPosition()[1];
+
+		//if tree is in top left corner
+		if(row == 1 && column == 1) {
+			if(Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column + 1])) {
+				return new int[] {row + 1, column};
+			} else {
+				return new int[] {row, column + 1};
+			}
+		}
+
+		//if tree is in top right corner
+		if(row == 1 && column == puzzle.getColumns() - 1) {
+			if(Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1])) {
+				return new int[] {row + 1, column};
+			} else {
+				return new int[] {row, column - 1};
+			}
+		}
+
+		//if tree is in bottom left corner
+		if(row == puzzle.getRows() - 1 && column == 1) {
+			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column + 1])) {
+				return new int[] {row - 1, column};
+			} else {
+				return new int[] {row, column + 1};
+			}
+		}
+
+		//if tree is in bottom right corner
+		if(row == puzzle.getRows() - 1 && column == puzzle.getColumns() - 1) {
+			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1])) {
+				return new int[] {row - 1, column};
+			} else {
+				return new int[] {row, column - 1};
+			}
+		}
+
+		if(row == 1) {
+			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
+				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row + 1, column} : new int[] {row, column - 1};
+			} else {
+				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row + 1, column} : new int[] {row, column + 1};
+			}
+		}
+
+		if(row == puzzle.getRows() - 1) {
+			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
+				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row - 1, column} : new int[] {row, column - 1};
+			} else {
+				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row - 1, column} : new int[] {row, column + 1};
+			}
+		}
+
+		if(column == 1) {
+			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[row + 1][0])) {
+				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row - 1, column} : new int[] {row, column + 1};
+			} else {
+				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row + 1, column} : new int[] {row, column + 1};
+			}
+		}
+
+		if(column == puzzle.getColumns() - 1) {
+			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[row + 1][0])) {
+				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row - 1, column} : new int[] {row, column - 1};
+			} else {
+				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row + 1, column} : new int[] {row, column - 1};
+			}
+		}
+
+
+		if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[row + 1][0])) {
+			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
+				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row - 1, column} : new int[] {row, column - 1};
+			} else {
+				return Integer.parseInt(p[row - 1][0]) < Integer.parseInt(p[0][column + 1]) ? new int[] {row - 1, column} : new int[] {row, column + 1};
+			}
+		} else {
+			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
+				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row + 1, column} : new int[] {row, column - 1};
+			} else {
+				return Integer.parseInt(p[row + 1][0]) < Integer.parseInt(p[0][column + 1]) ? new int[] {row + 1, column} : new int[] {row, column + 1};
+			}
+		}
 	}
 	
 	
