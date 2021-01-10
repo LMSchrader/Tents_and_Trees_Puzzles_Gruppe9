@@ -1,8 +1,10 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Stack;
 
 public class Tents_and_Trees_Solver {
@@ -38,15 +40,24 @@ public class Tents_and_Trees_Solver {
 //				System.out.println("BACKTRACK");
 //				updatedPuzzle.printPuzzle();
 			} else {
+				Node shadowNode = currentNode.clone();
 				currentNode.update(t, tentPos);
-				updatePuzzle();
+				updatePuzzle();		
 				constraints(updatedPuzzle);
-				System.out.println("UPDATE");
-				updatedPuzzle.printPuzzle();
+//				System.out.println("UPDATE");
+//				updatedPuzzle.printPuzzle(currentNode);
 				if(!constraintPropagation()) { // propagation
 					// create a new node based on the old currentNode to build path (currentPath)
-					currentPath.push(currentNode);
+					shadowNode.update(shadowNode.getTree(t.getPosition()), tentPos);
+					currentPath.push(shadowNode);
 					currentNode = new Node(currentNode);
+				} else {
+					currentNode = shadowNode;
+					createPuzzleFromNode(currentNode);
+					currentNode.getTree(t.getPosition()).deleteFromDomain(tentPos);
+					setGrassOrEmptyFieldDependingOnAllUninstantiatedTreeDomains(tentPos);
+//					System.out.println("PROPAGATION");
+//					updatedPuzzle.printPuzzle();
 				}
 			}	
 		}
@@ -119,12 +130,32 @@ public class Tents_and_Trees_Solver {
 		//TODO: other heuristics
 		// random tree
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
-		Tree tree = trees.get((int)(Math.random() * ((trees.size() - 1) + 1)));
-		return tree;
+//		Tree tree = trees.get((int)(Math.random() * ((trees.size() - 1) + 1)));
+//		return tree;
+		// first 
+		return trees.get(0);
 	}
 	
 	private int[] selectTent(Tree tree) {
 		//TODO: other heuristics
+		return selectRandomTent(tree);
+	}
+	
+	private int[] selectFirstTent(Tree tree) {
+		int domainSize = tree.getDomain().size();
+		int[] tent;
+		for (int i = 0; i < domainSize; i++) {
+			tent = tree.getDomain().get(0);
+			if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
+				return tent;
+			} else {
+				tree.deleteFromDomain(tent);
+			}
+		}
+		return null;
+	}
+	
+	private int[] selectRandomTent(Tree tree) {
 		// random tent
 		int domainSize = tree.getDomain().size();
 		int[] tent;
@@ -142,30 +173,37 @@ public class Tents_and_Trees_Solver {
 	
 	private void backtrack() {
 		int[] treePos;
+		int[] tentPos;
 		
 		do {
 			// set previous node as current node and delete tent position from the domain of the updated tree
 			currentNode = currentPath.pop();
 			treePos = currentNode.getUpdatedTree().getPosition();
+			tentPos = currentNode.getUpdatedTree().getCurrentTentPosition();
 			currentNode.undoUpdate();
 			BACKTRACKCOUNT++;
 		} while (currentNode.getTree(treePos).getDomain().isEmpty());
 		
 		createPuzzleFromNode(this.currentNode);
+		this.setGrassOrEmptyFieldDependingOnAllUninstantiatedTreeDomains(tentPos);
 	}
 	
 	private boolean constraintPropagation() {
-		Node shadowNode = currentNode.clone();
+//		Node shadowNode = currentNode.clone();
 		boolean result = forwardChecking();
-		if(result) {
-			currentNode = shadowNode;
-			currentNode.undoUpdate();
-			createPuzzleFromNode(currentNode);
-			System.out.println("PROPAGATION");
-			updatedPuzzle.printPuzzle();
-		}
+//		if(result) {
+//			int[] wrongTentPos = currentNode.getUpdatedTree().getCurrentTentPosition();
+//			currentNode = shadowNode;
+//			currentNode.undoUpdate();
+//			createPuzzleFromNode(currentNode);
+//			//TODO hier kann puzzle mit mehr gras gefuellt werden
+//			setGrassOrEmptyFieldDependingOnAllUninstantiatedTreeDomains(wrongTentPos);
+//			System.out.println("PROPAGATION");
+//			updatedPuzzle.printPuzzle();
+//		}
 		
 		return result;
+//		return false;
 	}
 	
 	private boolean forwardChecking() {
@@ -209,15 +247,30 @@ public class Tents_and_Trees_Solver {
 				toBeDeleted.add(domainElementPos);
 			}
 		}
-		
-		for (int[] toBeDeletedElement : toBeDeleted) {
-			neighbouringTree.deleteFromDomain(toBeDeletedElement);
-		}
-		
+			
 		if (!toBeDeleted.isEmpty()) {
+			for (int[] toBeDeletedElement : toBeDeleted) {
+				neighbouringTree.deleteFromDomain(toBeDeletedElement);
+			}
 			return true;
 		}
 		return false;
+	}
+	
+	private void setGrassOrEmptyFieldDependingOnAllUninstantiatedTreeDomains(int[] domainPos) {
+		if (updatedPuzzle.getPuzzle() [domainPos[0]] [domainPos[1]].equals("")) {
+			List<Tree> allUninstantiatedTrees = currentNode.getUninstantiatedTrees();
+			for (int i = 0; i<allUninstantiatedTrees.size(); i++) {
+				Tree t = allUninstantiatedTrees.get(i);
+				for (int[] domainElement : t.getDomain()) {
+					if (Arrays.equals(domainPos, domainElement)) {
+						return;
+					}
+				}
+			}
+			
+			updatedPuzzle.getPuzzle() [domainPos[0]] [domainPos[1]] = "g";
+		}
 	}
 	
 	private void constraints(Puzzle puzzle) {
@@ -331,7 +384,11 @@ public class Tents_and_Trees_Solver {
 	// after a new tent was set
 	private void updatePuzzle() {
 		int[] tentPos= currentNode.getUpdatedTree().getCurrentTentPosition();
+		List<int[]> domain = currentNode.getUpdatedTree().getDomain();
 		updatedPuzzle.getPuzzle()[tentPos[0]][tentPos[1]] = "^";
+		for (int[] domainElement : domain) {
+			setGrassOrEmptyFieldDependingOnAllUninstantiatedTreeDomains(domainElement);
+		}
 	}
 	
 	// within backtrack

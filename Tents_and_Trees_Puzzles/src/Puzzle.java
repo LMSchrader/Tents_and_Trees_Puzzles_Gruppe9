@@ -71,6 +71,37 @@ public class Puzzle {
 		System.out.println();
 	}
 	
+	public void printPuzzle(Node n) {
+		int[] treePos = n.getUpdatedTree().getPosition();
+		int[] tentPos = n.getUpdatedTree().getCurrentTentPosition();
+		for (int i = 0; i < puzzle.length; i++) {
+			for (int j = 0; j < puzzle[i].length; j++) {
+				if (puzzle[i][j].equals("")) {
+					System.out.print("  ");
+				} else {
+					try {
+						Integer a = Integer.parseInt(puzzle[i][j]);
+						if(a > 9) {
+							System.out.print(puzzle[i][j]);
+						} else {
+							System.out.print(" " + puzzle[i][j]);
+						}
+					} catch(Exception E) {
+						if((treePos[0]==i && treePos[1]==j)||(tentPos[0]==i && tentPos[1]==j)) {
+							System.out.print("*");
+						} else {
+							System.out.print(" ");
+						}
+						System.out.print(puzzle[i][j]);
+					}
+					
+				}
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+	
 	public int countNumberOfXInRow(int row, String x) {
 		if (isLegalRowIndex(row)) {
 			int count = 0;
