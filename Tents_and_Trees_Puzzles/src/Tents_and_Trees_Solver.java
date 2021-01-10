@@ -35,20 +35,19 @@ public class Tents_and_Trees_Solver {
 			int[] tentPos = selectTent(t);//select consistent value
 			if (tentPos == null) { // if domain is empty
 				backtrack();
-				createPuzzleFromNode(this.currentNode);
 //				System.out.println("BACKTRACK");
 //				updatedPuzzle.printPuzzle();
 			} else {
 				currentNode.update(t, tentPos);
 				updatePuzzle();
 				constraints(updatedPuzzle);
-//				System.out.println("UPDATE");
-//				updatedPuzzle.printPuzzle();
-				constraintPropagation(); // propagation
-				
-				// create a new node based on the old currentNode to build path (currentPath)
-				currentPath.push(currentNode);
-				currentNode = new Node(currentNode);
+				System.out.println("UPDATE");
+				updatedPuzzle.printPuzzle();
+				if(!constraintPropagation()) { // propagation
+					// create a new node based on the old currentNode to build path (currentPath)
+					currentPath.push(currentNode);
+					currentNode = new Node(currentNode);
+				}
 			}	
 		}
 		System.out.println("RESULT");
@@ -112,7 +111,7 @@ public class Tents_and_Trees_Solver {
 		puzzle.markZeroes();
 //		puzzle.printPuzzle();
 		puzzle.setGrassForSquaresWithNoAvailableTree();
-//		puzzle.printPuzzle();
+		puzzle.printPuzzle();
 		//preprocessing3();
 	}
 	
@@ -151,10 +150,74 @@ public class Tents_and_Trees_Solver {
 			currentNode.undoUpdate();
 			BACKTRACKCOUNT++;
 		} while (currentNode.getTree(treePos).getDomain().isEmpty());
+		
+		createPuzzleFromNode(this.currentNode);
 	}
 	
-	private void constraintPropagation() {
-		//TODO
+	private boolean constraintPropagation() {
+		Node shadowNode = currentNode.clone();
+		boolean result = forwardChecking();
+		if(result) {
+			currentNode = shadowNode;
+			currentNode.undoUpdate();
+			createPuzzleFromNode(currentNode);
+			System.out.println("PROPAGATION");
+			updatedPuzzle.printPuzzle();
+		}
+		
+		return result;
+	}
+	
+	private boolean forwardChecking() {
+		Tree tree = currentNode.getUpdatedTree();
+		List<Tree> uninstantiatedNeighbours = getUninstantiatedNeighbours(tree);
+		for (int i = 0; i<uninstantiatedNeighbours.size(); i++) {
+			if (deleteInconsistentValuesForwardChecking(uninstantiatedNeighbours.get(i))) {
+				if(uninstantiatedNeighbours.get(i).getDomain().isEmpty()) {
+					return true;
+				}
+			}
+		}
+		return false;
+		
+	}
+	
+	private List<Tree> getUninstantiatedNeighbours(Tree tree) {
+		List<Tree> uninstantiatedNeighbours = new ArrayList<>();
+		List<Tree> allUninstantiatedTrees = currentNode.getUninstantiatedTrees();
+		
+		for (int i = 0; i<allUninstantiatedTrees.size(); i++) {
+			Tree t = allUninstantiatedTrees.get(i);
+			if (t.getPosition()[0] > tree.getPosition()[0]-3 &&  t.getPosition()[0] < tree.getPosition()[0]+3) {
+				uninstantiatedNeighbours.add(t);
+			} else if (t.getPosition()[1] > tree.getPosition()[1]-3 &&  t.getPosition()[1] < tree.getPosition()[1]+3) {
+				uninstantiatedNeighbours.add(t);
+			}
+		}
+		return uninstantiatedNeighbours;
+		
+	}
+	
+	private boolean deleteInconsistentValuesForwardChecking(Tree neighbouringTree) {
+		List<int[]> neighbouringTreeDomain = neighbouringTree.getDomain();
+		List<int[]> toBeDeleted = new ArrayList<>();
+		String[][] puzzle = updatedPuzzle.getPuzzle();
+		
+		for (int i = 0; i < neighbouringTreeDomain.size(); i++) {
+			int[] domainElementPos = neighbouringTreeDomain.get(i);
+			if (!puzzle[domainElementPos[0]][domainElementPos[1]].equals("")) {
+				toBeDeleted.add(domainElementPos);
+			}
+		}
+		
+		for (int[] toBeDeletedElement : toBeDeleted) {
+			neighbouringTree.deleteFromDomain(toBeDeletedElement);
+		}
+		
+		if (!toBeDeleted.isEmpty()) {
+			return true;
+		}
+		return false;
 	}
 	
 	private void constraints(Puzzle puzzle) {

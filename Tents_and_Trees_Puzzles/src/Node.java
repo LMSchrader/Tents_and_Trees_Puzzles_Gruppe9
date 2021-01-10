@@ -42,6 +42,12 @@ public class Node {
 			allTrees.put(entry.getKey(), entry.getValue().clone());
 		}
 	}
+	
+	public Node clone() {
+		Node n = new Node(this);
+		n.setUpdatedTree(n.getTree(this.getUpdatedTree().getPosition()));
+		return n;
+	}
 
 	public Map<int[], Tree> getAllTrees() {
 		return allTrees;
@@ -64,5 +70,9 @@ public class Node {
 	public void undoUpdate() {
 		this.updatedTree.setCurrentTentPosition(null);
 		this.updatedTree = null;
+	}
+	
+	private void setUpdatedTree(Tree tree) {
+		this.updatedTree = tree;
 	}
 }
