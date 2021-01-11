@@ -137,7 +137,7 @@ public class Tents_and_Trees_Solver {
 		return treeWithSmallestDomain;
 	}
 	
-	/*
+	
 	private Tree selectMostConstrainingTree() {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
 		int maxConstraints = 0;
@@ -153,14 +153,14 @@ public class Tents_and_Trees_Solver {
 				domain.retainAll(otherDomain);
 				constraintCount += domain.size();
 			}
-			if (constraintCount > maxConstraints) {
+			if (constraintCount >= maxConstraints) {
 				maxConstraints = constraintCount;
 				mostConstrainingTree = tree;
 			}
 		}
 		return mostConstrainingTree;
 	}
-	*/
+	
 	
 	private int[] selectTent(Tree tree) {
 		//TODO: other heuristics
