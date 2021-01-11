@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Stack;
 
 public class Tents_and_Trees_Solver {
@@ -199,7 +198,6 @@ public class Tents_and_Trees_Solver {
 //			currentNode = shadowNode;
 //			currentNode.undoUpdate();
 //			createPuzzleFromNode(currentNode);
-//			//TODO hier kann puzzle mit mehr gras gefuellt werden
 //			setGrassOrEmptyFieldDependingOnAllUninstantiatedTreeDomains(wrongTentPos);
 //			System.out.println("PROPAGATION");
 //			updatedPuzzle.printPuzzle();

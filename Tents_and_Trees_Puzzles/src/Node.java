@@ -46,7 +46,7 @@ public class Node {
 	public Node clone() {
 		Node n = new Node(this);
 		if(this.getUpdatedTree()!=null) {
-		n.setUpdatedTree(n.getTree(this.getUpdatedTree().getPosition()));
+			n.setUpdatedTree(n.getTree(this.getUpdatedTree().getPosition()));
 		}
 		return n;
 	}
