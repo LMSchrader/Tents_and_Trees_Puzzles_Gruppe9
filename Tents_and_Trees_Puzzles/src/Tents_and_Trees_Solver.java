@@ -143,6 +143,9 @@ public class Tents_and_Trees_Solver {
 		int maxConstraints = 0;
 		Tree mostConstrainingTree = null;
 		for (Tree tree: trees) {
+			if (tree.getDomain().size() == 1) {
+				return tree;
+			}
 			int constraintCount = 0;
 			for (Tree otherTree: trees) {
 				if (otherTree == tree) {
