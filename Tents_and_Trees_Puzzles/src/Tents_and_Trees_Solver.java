@@ -127,32 +127,22 @@ public class Tents_and_Trees_Solver {
 	}
 	
 	private Tree selectTree() {
-		//TODO: other heuristics
-		// random tree
+		return selectRandomTree();
+	}
+	
+	private Tree selectRandomTree() {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
-//		Tree tree = trees.get((int)(Math.random() * ((trees.size() - 1) + 1)));
-//		return tree;
-		// first 
+		Tree tree = trees.get((int)(Math.random() * ((trees.size() - 1) + 1)));
+		return tree;
+	}
+	
+	private Tree selectFirstTree() {
+		List<Tree> trees = currentNode.getUninstantiatedTrees();
 		return trees.get(0);
 	}
 	
 	private int[] selectTent(Tree tree) {
-		//TODO: other heuristics
 		return selectRandomTent(tree);
-	}
-	
-	private int[] selectFirstTent(Tree tree) {
-		int domainSize = tree.getDomain().size();
-		int[] tent;
-		for (int i = 0; i < domainSize; i++) {
-			tent = tree.getDomain().get(0);
-			if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
-				return tent;
-			} else {
-				tree.deleteFromDomain(tent);
-			}
-		}
-		return null;
 	}
 	
 	private int[] selectRandomTent(Tree tree) {
@@ -170,6 +160,19 @@ public class Tents_and_Trees_Solver {
 		return null;
 	}
 	
+	private int[] selectFirstTent(Tree tree) {
+		int domainSize = tree.getDomain().size();
+		int[] tent;
+		for (int i = 0; i < domainSize; i++) {
+			tent = tree.getDomain().get(0);
+			if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
+				return tent;
+			} else {
+				tree.deleteFromDomain(tent);
+			}
+		}
+		return null;
+	}
 	
 	private void backtrack() {
 		int[] treePos;
