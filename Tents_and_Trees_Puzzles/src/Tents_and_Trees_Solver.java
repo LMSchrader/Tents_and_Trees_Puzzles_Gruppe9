@@ -30,7 +30,8 @@ public class Tents_and_Trees_Solver {
 			Tree t = selectTree(); // select variable
 
 			//int[] tentPos = selectTent(t);//select consistent value
-			int[] tentPos = selectTentMaxNumber(t);
+			//int[] tentPos = selectTentWithMaxDifference(t);
+			int[] tentPos = selectTentMinNumber(t);
 			if (tentPos == null) { // if domain is empty
 				backtrack();
 				createPuzzleFromNode(this.currentNode);
@@ -139,15 +140,30 @@ public class Tents_and_Trees_Solver {
 		return null;
 	}
 
-	private int[] selectTentMaxNumber(Tree tree) {
-		String[][] p = puzzle.getPuzzle();
+	private int[] selectTentMinNumber(Tree tree) {
+		if(tree.getCurrentTentPosition() != null) {
+			int[] tent = tree.getCurrentTentPosition();
+			tree.deleteFromDomain(tent);
+			tree.setCurrentTentPosition(null);
+		}
+
+		String[][] puz = puzzle.getPuzzle();
 
 		int row = tree.getPosition()[0];
 		int column = tree.getPosition()[1];
 
+		int[][] p = new int[puzzle.getRows()][puzzle.getColumns()];
+		for(int i = 0; i < puzzle.getRows(); i++) {
+			for(int k = 0; k < puzzle.getColumns(); k++) {
+				if((i == 0 && k != 0)|| (k == 0 && i != 0)) {
+					p[i][k] = Integer.parseInt(puz[i][k]);
+				}
+			}
+		}
+
 		//if tree is in top left corner
 		if(row == 1 && column == 1) {
-			if(Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column + 1])) {
+			if(p[row + 1][0] < p[0][column + 1]) {
 				return new int[] {row + 1, column};
 			} else {
 				return new int[] {row, column + 1};
@@ -156,7 +172,7 @@ public class Tents_and_Trees_Solver {
 
 		//if tree is in top right corner
 		if(row == 1 && column == puzzle.getColumns() - 1) {
-			if(Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1])) {
+			if(p[row + 1][0] < p[0][column - 1]) {
 				return new int[] {row + 1, column};
 			} else {
 				return new int[] {row, column - 1};
@@ -165,7 +181,7 @@ public class Tents_and_Trees_Solver {
 
 		//if tree is in bottom left corner
 		if(row == puzzle.getRows() - 1 && column == 1) {
-			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column + 1])) {
+			if(p[row - 1][0] < p[0][column + 1]) {
 				return new int[] {row - 1, column};
 			} else {
 				return new int[] {row, column + 1};
@@ -174,7 +190,7 @@ public class Tents_and_Trees_Solver {
 
 		//if tree is in bottom right corner
 		if(row == puzzle.getRows() - 1 && column == puzzle.getColumns() - 1) {
-			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1])) {
+			if(p[row - 1][0] < p[0][column - 1]) {
 				return new int[] {row - 1, column};
 			} else {
 				return new int[] {row, column - 1};
@@ -182,53 +198,429 @@ public class Tents_and_Trees_Solver {
 		}
 
 		if(row == 1) {
-			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
-				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row + 1, column} : new int[] {row, column - 1};
+			if(p[0][column - 1] < p[0][column + 1]) {
+				return p[row + 1][0] < p[0][column - 1] ? new int[] {row + 1, column} : new int[] {row, column - 1};
 			} else {
-				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row + 1, column} : new int[] {row, column + 1};
+				return p[row + 1][0] < p[0][column + 1] ? new int[] {row + 1, column} : new int[] {row, column + 1};
 			}
 		}
 
 		if(row == puzzle.getRows() - 1) {
-			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
-				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row - 1, column} : new int[] {row, column - 1};
+			if(p[0][column - 1] < p[0][column + 1]) {
+				return p[row - 1][0] < p[0][column - 1] ? new int[] {row - 1, column} : new int[] {row, column - 1};
 			} else {
-				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row - 1, column} : new int[] {row, column + 1};
+				return p[row - 1][0] < p[0][column + 1] ? new int[] {row - 1, column} : new int[] {row, column + 1};
 			}
 		}
 
 		if(column == 1) {
-			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[row + 1][0])) {
-				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row - 1, column} : new int[] {row, column + 1};
+			if(p[row - 1][0] < p[row + 1][0]) {
+				return p[row - 1][0] < p[0][column + 1] ? new int[] {row - 1, column} : new int[] {row, column + 1};
 			} else {
-				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column + 1]) ? new int[] {row + 1, column} : new int[] {row, column + 1};
+				return p[row + 1][0] < p[0][column + 1] ? new int[] {row + 1, column} : new int[] {row, column + 1};
 			}
 		}
 
 		if(column == puzzle.getColumns() - 1) {
-			if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[row + 1][0])) {
-				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row - 1, column} : new int[] {row, column - 1};
+			if(p[row - 1][0] < p[row + 1][0]) {
+				return p[row - 1][0] < p[0][column - 1] ? new int[] {row - 1, column} : new int[] {row, column - 1};
 			} else {
-				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row + 1, column} : new int[] {row, column - 1};
+				return p[row + 1][0] < p[0][column - 1] ? new int[] {row + 1, column} : new int[] {row, column - 1};
 			}
 		}
 
 
-		if(Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[row + 1][0])) {
-			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
-				return Integer.parseInt(p[row - 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row - 1, column} : new int[] {row, column - 1};
+		if(p[row - 1][0] < p[row + 1][0]) {
+			if(p[0][column - 1] < p[0][column + 1]) {
+				return p[row - 1][0] < p[0][column - 1] ? new int[] {row - 1, column} : new int[] {row, column - 1};
 			} else {
-				return Integer.parseInt(p[row - 1][0]) < Integer.parseInt(p[0][column + 1]) ? new int[] {row - 1, column} : new int[] {row, column + 1};
+				return p[row - 1][0] > p[0][column + 1] ? new int[] {row - 1, column} : new int[] {row, column + 1};
 			}
 		} else {
-			if(Integer.parseInt(p[0][column - 1]) > Integer.parseInt(p[0][column + 1])) {
-				return Integer.parseInt(p[row + 1][0]) > Integer.parseInt(p[0][column - 1]) ? new int[] {row + 1, column} : new int[] {row, column - 1};
+			if(p[0][column - 1] < p[0][column + 1]) {
+				return p[row + 1][0] < p[0][column - 1] ? new int[] {row + 1, column} : new int[] {row, column - 1};
 			} else {
-				return Integer.parseInt(p[row + 1][0]) < Integer.parseInt(p[0][column + 1]) ? new int[] {row + 1, column} : new int[] {row, column + 1};
+				return p[row + 1][0] > p[0][column + 1] ? new int[] {row + 1, column} : new int[] {row, column + 1};
 			}
 		}
 	}
-	
+
+	private int[] selectTentWithMaxDifference(Tree tree) {
+
+		if(tree.getCurrentTentPosition() != null) {
+			int[] tent = tree.getCurrentTentPosition();
+			tree.deleteFromDomain(tent);
+			tree.setCurrentTentPosition(null);
+		}
+		
+
+		int row = tree.getPosition()[0];
+		int column = tree.getPosition()[1];
+
+		int domainSize = tree.getDomain().size();
+
+		String[][] p = puzzle.getPuzzle();
+
+		int tentsInColumnLeft = 0;
+		int tentsInColumn = 0;
+		int tentsInColumnRight = 0;
+
+		int tentsInRowAbove = 0;
+		int tentsInRow = 0;
+		int tentsInRowBelow = 0;
+
+
+		if(domainSize < 4) {
+			if (row == 1) {
+
+				int numberInRow = Integer.parseInt(p[row][0]);
+				int numberInRowBelow = Integer.parseInt(p[row + 1][0]);
+
+				for (int i = 0; i < p[0].length; i++) {
+					if (p[row][i].equals("^")) {
+						tentsInRow++;
+					}
+					if (p[row + 1][i].equals("^")) {
+						tentsInRowBelow++;
+					}
+				}
+
+				if (column == 1) {
+					int numberInColumn = Integer.parseInt(p[0][column]);
+					int numberInColumnRight = Integer.parseInt(p[0][column + 1]);
+
+					for (int i = 0; i < p.length; i++) {
+						if (p[i][column].equals("^")) {
+							tentsInColumn++;
+						}
+						if (p[i][column + 1].equals("^")) {
+							tentsInColumnRight++;
+						}
+
+						int rightDifference = numberInColumnRight + numberInRow - tentsInRow - tentsInColumnRight;
+						int belowDifference = numberInColumn + numberInRowBelow - tentsInColumn - tentsInRowBelow;
+
+						return rightDifference > belowDifference ? new int[]{row, column + 1} : new int[]{row + 1, column};
+					}
+
+				} else if (column == puzzle.getColumns() - 1) {
+					int numberInColumn = Integer.parseInt(p[0][column]);
+					int numberInColumnLeft = Integer.parseInt(p[0][column - 1]);
+
+					for (int i = 0; i < p[0].length; i++) {
+						if (p[i][column - 1].equals("^")) {
+							tentsInColumnLeft++;
+						}
+						if (p[i][column].equals("^")) {
+							tentsInColumn++;
+						}
+					}
+					int leftDifference = numberInColumnLeft + numberInRow - tentsInRow - tentsInColumn;
+					int belowDifference = numberInColumn + numberInRowBelow - tentsInColumn - tentsInRowBelow;
+
+					return leftDifference > belowDifference ? new int[]{row, column - 1} : new int[]{row + 1, column};
+				} else {
+
+					for (int i = 0; i < p.length; i++) {
+						if (p[i][column - 1].equals("^")) {
+							tentsInColumnLeft++;
+						}
+						if (p[i][column].equals("^")) {
+							tentsInColumn++;
+						}
+						if (p[i][column + 1].equals("^")) {
+							tentsInColumnRight++;
+						}
+					}
+
+					for (int i = 0; i < p[0].length; i++) {
+
+						if (p[row][i].equals("^")) {
+							tentsInRow++;
+						}
+						if (p[row + 1][i].equals("^")) {
+							tentsInRowBelow++;
+						}
+					}
+
+					int numberInColumnLeft = Integer.parseInt(p[0][column - 1]);
+					int numberInColumn = Integer.parseInt(p[0][column]);
+					int numberInColumnRight = Integer.parseInt(p[0][column + 1]);
+
+					int[] differences = new int[3];
+					differences[0] = numberInColumnRight + numberInRow - tentsInColumnRight - tentsInRow;
+					differences[1] = numberInColumn + numberInRowBelow - tentsInColumn - tentsInRowBelow;
+					differences[2] = numberInColumnLeft + numberInRow - tentsInColumnLeft - tentsInRow;
+
+					int max = findMax(differences);
+
+					switch (max) {
+						case 0:
+							return new int[]{row, column + 1};
+						case 1:
+							return new int[]{row + 1, column};
+						case 2:
+							return new int[]{row, column - 1};
+						case 3:
+					}
+				}
+			} else if (row == puzzle.getRows() - 1) {
+
+				int numberInRow = Integer.parseInt(p[row][0]);
+				int numberInRowAbove = Integer.parseInt(p[row - 1][0]);
+
+				for (int i = 0; i < p[0].length; i++) {
+					if (p[row][i].equals("^")) {
+						tentsInRow++;
+					}
+					if (p[row - 1][i].equals("^")) {
+						tentsInRowAbove++;
+					}
+				}
+
+				if (column == 1) {
+					int numberInColumn = Integer.parseInt(p[0][column]);
+					int numberInColumnRight = Integer.parseInt(p[0][column + 1]);
+
+					for (int i = 0; i < p.length; i++) {
+						if (p[i][column].equals("^")) {
+							tentsInColumn++;
+						}
+						if (p[i][column + 1].equals("^")) {
+							tentsInColumnRight++;
+						}
+
+						int rightDifference = numberInColumnRight + numberInRow - tentsInRow - tentsInColumnRight;
+						int AboveDifference = numberInColumn + numberInRowAbove - tentsInColumn - tentsInRowAbove;
+
+						return rightDifference > AboveDifference ? new int[]{row, column + 1} : new int[]{row - 1, column};
+					}
+
+				} else if (column == puzzle.getColumns() - 1) {
+					int numberInColumn = Integer.parseInt(p[0][column]);
+					int numberInColumnLeft = Integer.parseInt(p[0][column - 1]);
+
+					for (int i = 0; i < p[0].length; i++) {
+						if (p[i][column - 1].equals("^")) {
+							tentsInColumnLeft++;
+						}
+						if (p[i][column].equals("^")) {
+							tentsInColumn++;
+						}
+					}
+					int leftDifference = numberInColumnLeft + numberInRow - tentsInRow - tentsInColumn;
+					int AboveDifference = numberInColumn + numberInRowAbove - tentsInColumn - tentsInRowAbove;
+
+					return leftDifference > AboveDifference ? new int[]{row, column - 1} : new int[]{row - 1, column};
+				} else {
+					for (int i = 0; i < p.length; i++) {
+						if (p[i][column - 1].equals("^")) {
+							tentsInColumnLeft++;
+						}
+						if (p[i][column].equals("^")) {
+							tentsInColumn++;
+						}
+						if (p[i][column + 1].equals("^")) {
+							tentsInColumnRight++;
+						}
+					}
+
+					for (int i = 0; i < p[0].length; i++) {
+						if (p[row - 1][i].equals("^")) {
+							tentsInRowAbove++;
+						}
+						if (p[row][i].equals("^")) {
+							tentsInRow++;
+						}
+
+					}
+
+					int numberInColumnLeft = Integer.parseInt(p[0][column - 1]);
+					int numberInColumn = Integer.parseInt(p[0][column]);
+					int numberInColumnRight = Integer.parseInt(p[0][column + 1]);
+
+					int[] differences = new int[3];
+					differences[0] = numberInColumnRight + numberInRow - tentsInColumnRight - tentsInRow;
+					differences[1] = numberInColumn + numberInRowAbove - tentsInColumn - tentsInRowAbove;
+					differences[2] = numberInColumnLeft + numberInRow - tentsInColumnLeft - tentsInRow;
+
+					int max = findMax(differences);
+
+					switch (max) {
+						case 0:
+							return new int[]{row, column + 1};
+						case 1:
+							return new int[]{row - 1, column};
+						case 2:
+							return new int[]{row, column - 1};
+						case 3:
+					}
+				}
+			} else if(column == 1) {
+				for (int i = 0; i < p.length; i++) {
+					if (p[i][column].equals("^")) {
+						tentsInColumn++;
+					}
+					if (p[i][column + 1].equals("^")) {
+						tentsInColumnRight++;
+					}
+				}
+
+				for (int i = 0; i < p[0].length; i++) {
+					if (p[row - 1][i].equals("^")) {
+						tentsInRowAbove++;
+					}
+					if (p[row][i].equals("^")) {
+						tentsInRow++;
+					}
+					if(p[row + 1][i].equals("^")) {
+						tentsInRowBelow++;
+					}
+
+				}
+
+				int numberInRowAbove = Integer.parseInt(p[row - 1][0]);
+				int numberInRow = Integer.parseInt(p[row][0]);
+				int numberInRowBelow = Integer.parseInt(p[row + 1][0]);
+
+				int numberInColumn = Integer.parseInt(p[0][column]);
+				int numberInColumnRight = Integer.parseInt(p[0][column + 1]);
+
+				int[] differences = new int[3];
+				differences[0] = numberInRowAbove + numberInColumn - tentsInRowAbove - tentsInColumn;
+				differences[1] = numberInColumnRight + numberInRow - tentsInColumnRight - tentsInRow;
+				differences[2] = numberInColumn + numberInRowBelow - tentsInColumn - tentsInRowBelow;
+
+				int max = findMax(differences);
+
+				switch (max) {
+					case 0:
+						return new int[]{row - 1, column};
+					case 1:
+						return new int[]{row, column + 1};
+					case 2:
+						return new int[]{row + 1, column};
+					case 3:
+				}
+			} else if(column == puzzle.getColumns() - 1) {
+
+				for (int i = 0; i < p.length; i++) {
+					if (p[i][column - 1].equals("^")) {
+						tentsInColumnLeft++;
+					}
+					if (p[i][column].equals("^")) {
+						tentsInColumn++;
+					}
+				}
+
+				for (int i = 0; i < p[0].length; i++) {
+					if (p[row - 1][i].equals("^")) {
+						tentsInRowAbove++;
+					}
+					if (p[row][i].equals("^")) {
+						tentsInRow++;
+					}
+					if(p[row + 1][i].equals("^")) {
+						tentsInRowBelow++;
+					}
+
+				}
+
+				int numberInRowAbove = Integer.parseInt(p[row - 1][0]);
+				int numberInRow = Integer.parseInt(p[row][0]);
+				int numberInRowBelow = Integer.parseInt(p[row + 1][0]);
+
+				int numberInColumnLeft = Integer.parseInt(p[0][column - 1]);
+				int numberInColumn = Integer.parseInt(p[0][column]);
+
+				int[] differences = new int[3];
+				differences[0] = numberInRowAbove + numberInColumn - tentsInRowAbove - tentsInColumn;
+				differences[1] = numberInColumnLeft + numberInRow - tentsInColumnLeft - tentsInRow;
+				differences[2] = numberInColumn + numberInRowBelow - tentsInColumn - tentsInRowBelow;
+
+				int max = findMax(differences);
+
+				switch (max) {
+					case 0:
+						return new int[]{row - 1, column};
+					case 1:
+						return new int[]{row, column - 1};
+					case 2:
+						return new int[]{row + 1, column};
+					case 3:
+				}
+			}
+		}
+
+
+
+		int numberInRowAbove = Integer.parseInt(p[row - 1][0]);
+		int numberInRow = Integer.parseInt(p[row][0]);
+		int numberInRowBelow = Integer.parseInt(p[row + 1][0]);
+
+		int numberInColumnLeft = Integer.parseInt(p[0][column - 1]);
+		int numberInColumn = Integer.parseInt(p[0][column]);
+		int numberInColumnRight = Integer.parseInt(p[0][column + 1]);
+
+
+		for(int i = 0; i < p.length; i++) {
+			if (p[i][column - 1].equals("^")) {
+				tentsInColumnLeft++;
+			}
+			if (p[i][column].equals("^")) {
+				tentsInColumn++;
+			}
+			if (p[i][column + 1].equals("^")) {
+				tentsInColumnRight++;
+			}
+		}
+
+
+		for(int k = 0; k < p[0].length; k++) {
+			if(p[row - 1][k].equals("^")) {
+				tentsInRowAbove++;
+			}
+			if(p[row][k].equals("^")) {
+				tentsInRow++;
+			}
+			if(p[row + 1][k].equals("^")) {
+				tentsInRowBelow++;
+			}
+		}
+
+		int[] differences = new int[4];
+		differences[0] = numberInColumn + numberInRowAbove - tentsInColumn - tentsInRowAbove;
+		differences[1] = numberInColumnRight + numberInRow - tentsInColumnRight - tentsInRow;
+		differences[2] = numberInColumn + numberInRowBelow - tentsInColumn - tentsInRowBelow;
+		differences[3] = numberInColumnLeft + numberInRow - tentsInColumnLeft - tentsInRow;
+
+		int max = findMax(differences);
+
+
+		switch(max) {
+			case 0:
+				return new int[]{row - 1, column};
+			case 1:
+				return new int[]{row, column + 1};
+			case 2:
+				return new int[]{row + 1, column};
+			case 3:
+				return new int[]{row, column - 1};
+			default:
+				return null;
+		}
+	}
+
+	private int findMax(int[] numbers) {
+		int max = 0;
+
+		for(int i = 0; i < numbers.length; i++) {
+			if(numbers[i] > max) {
+				max = i;
+			}
+		}
+		return max;
+	}
 	
 	private void backtrack() {
 		int[] treePos;
