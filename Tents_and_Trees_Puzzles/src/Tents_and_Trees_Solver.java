@@ -22,7 +22,7 @@ public class Tents_and_Trees_Solver {
 	
 	//  constraint satisfaction procedure
 	private void csp() {
-		puzzle.printPuzzle();
+//		puzzle.printPuzzle();
 		preprocessing();
 //		puzzle.printPuzzle();
 		currentNode = createFirstNode(); // define variables 
@@ -112,7 +112,7 @@ public class Tents_and_Trees_Solver {
 	}
 	
 	private Tree selectTree() {
-		return selectTreeWithSmallestDomain();
+		return selectMostConstrainingTree();
 	}
 	
 	private Tree selectRandomTree() {
@@ -139,19 +139,30 @@ public class Tents_and_Trees_Solver {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
 		int maxConstraints = 0;
 		Tree mostConstrainingTree = null;
-		for (Tree tree: trees) {
+		for (Tree tree: trees) { // tree that could be selected
 			if (tree.getDomain().size() == 1) {
 				return tree;
 			}
-			int constraintCount = 0;
-			for (Tree otherTree: trees) {
-				if (otherTree == tree) {
-					continue;
+			
+			int constraintCount = 0; // counter for object tree
+			
+			for (int[] pos : tree.getDomain()) {
+				
+				for (Tree otherTree: trees) {
+					if (otherTree == tree) {
+						continue;
+					}
+					
+					for (int[] otherPos : otherTree.getDomain()) {
+						if ((otherPos[0] > pos[0]-2 &&  otherPos[0] < tree.getPosition()[0]+2 && otherPos[1] > pos[1]-2 &&  otherPos[1] < tree.getPosition()[1]+2) || // if the tent position otherPos is adjacent to pos
+								 (otherPos[1] == pos[1] && updatedPuzzle.countNumberOfXInColumn(pos[1], "^") == updatedPuzzle.numberOfTentsThatShouldBeInColumn(pos[1])-1) || //if a tent on position pos would fill the column in which otherPos is located
+								 (otherPos[0] == pos[0] && updatedPuzzle.countNumberOfXInRow(pos[0], "^") == updatedPuzzle.numberOfTentsThatShouldBeInRow(pos[0])-1) // if a tent on position pos would fill the row in which otherPos is located
+								 ) {
+							constraintCount++;
+							continue;
+						}
+					}
 				}
-				List<int[]> domain = new ArrayList<int[]>(tree.getDomain());
-				List<int[]> otherDomain = new ArrayList<int[]>(otherTree.getDomain());
-				domain.retainAll(otherDomain);
-				constraintCount += domain.size();
 			}
 			if (constraintCount >= maxConstraints) {
 				maxConstraints = constraintCount;
@@ -167,7 +178,7 @@ public class Tents_and_Trees_Solver {
 	}
 	
 	private int[] selectTent(Tree tree) {
-		return selectFirstTent(tree);
+		return selectRandomTent(tree);
 	}
 	
 	private int[] selectRandomTent(Tree tree) {
