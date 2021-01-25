@@ -23,7 +23,7 @@ public class Tents_and_Trees_Solver {
 	//  constraint satisfaction procedure
 	private void csp() {
 //		puzzle.printPuzzle();
-		preprocessing();
+		constraintsBeforeCreatingFirstNode();
 //		puzzle.printPuzzle();
 		currentNode = createFirstNode(); // define variables 
 		
@@ -41,7 +41,7 @@ public class Tents_and_Trees_Solver {
 //				System.out.println("UPDATE");
 //				updatedPuzzle.printPuzzle(currentNode);
 				currentPath.push(currentNode.clone());
-				constraintPropagation(); // propagation
+				constraintPropagation();
 //				System.out.println("PROPAGATION");
 //				updatedPuzzle.printPuzzle();
 				// create a new node based on the old currentNode to build path (currentPath)
@@ -96,19 +96,15 @@ public class Tents_and_Trees_Solver {
 					Tree t = new Tree(pos, domain);
 					
 					allTrees.put(pos, t);
-				
 				}
-
 			}
 		}
-		
 		return new Node(allTrees);
 	}
 	
-	private void preprocessing() {
-		puzzle.markZeroes();
-		puzzle.setGrassForSquaresWithNoAvailableTree();
-		//preprocessing3();
+	private void constraintsBeforeCreatingFirstNode() {
+		puzzle.markZeroes(); // constraint:  There are exactly as many tents in each row or column as the number on the side indicates. 
+		puzzle.setGrassForSquaresWithNoAvailableTree(); // constraint:  Each tent must be attached to one tree.
 	}
 	
 	private Tree selectTree() {
@@ -132,8 +128,7 @@ public class Tents_and_Trees_Solver {
 				treeWithSmallestDomain = tree;
 		}
 		return treeWithSmallestDomain;
-	}
-	
+	}	
 	
 	private Tree selectMostConstrainingTree() {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
@@ -172,11 +167,6 @@ public class Tents_and_Trees_Solver {
 		return mostConstrainingTree;
 	}
 	
-	private Tree selectFirstTree() {
-		List<Tree> trees = currentNode.getUninstantiatedTrees();
-		return trees.get(0);
-	}
-	
 	private int[] selectTent(Tree tree) {
 		return selectLeastConstrainingTent(tree);
 	}
@@ -187,20 +177,6 @@ public class Tents_and_Trees_Solver {
 		int[] tent;
 		for (int i = 0; i < domainSize; i++) {
 			tent = tree.getDomain().get((int)(Math.random() * ((tree.getDomain().size() - 1) + 1)));
-			if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
-				return tent;
-			} else {
-				tree.deleteFromDomain(tent);
-			}
-		}
-		return null;
-	}
-	
-	private int[] selectFirstTent(Tree tree) {
-		int domainSize = tree.getDomain().size();
-		int[] tent;
-		for (int i = 0; i < domainSize; i++) {
-			tent = tree.getDomain().get(0);
 			if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
 				return tent;
 			} else {
@@ -231,7 +207,6 @@ public class Tents_and_Trees_Solver {
 				}
 			}
 		}
-		
 		return selectedTent;
 	}
 	
@@ -256,7 +231,6 @@ public class Tents_and_Trees_Solver {
 				}
 			}
 		}
-		
 		return selectedTent;
 	}
 	
@@ -297,7 +271,6 @@ public class Tents_and_Trees_Solver {
 			}
 		}
 		return false;
-		
 	}
 	
 	private List<Tree> getUninstantiatedNeighbours(Tree tree) {
@@ -313,7 +286,6 @@ public class Tents_and_Trees_Solver {
 			}
 		}
 		return uninstantiatedNeighbours;
-		
 	}
 	
 	private boolean deleteInconsistentValuesForwardChecking(Tree neighbouringTree) {
@@ -455,36 +427,11 @@ public class Tents_and_Trees_Solver {
 		}
 	}
 	
-	//TODO: preprocessing 3 funktioniert nicht mit aktueller Datenstruktur
-	private void preprocessing3() {
-		for (int i = 1; i < puzzle.getRows(); i++) {
-			int numberOfMinssingTents = puzzle.numberOfTentsThatShouldBeInRow(i) - puzzle.countNumberOfXInRow(i, "^");
-			if (puzzle.countNumberOfXInRow(i, "") == numberOfMinssingTents) {
-				puzzle.fillUnknownFieldsofRowWithX(i, "^");
-			}
-		}
-		
-		for (int i = 1; i < puzzle.getColumns(); i++) {
-			int numberOfMinssingTents = puzzle.numberOfTentsThatShouldBeInColumn(i) - puzzle.countNumberOfXInColumn(i, "^");
-			if (puzzle.countNumberOfXInColumn(i, "") == numberOfMinssingTents) {
-				puzzle.fillUnknownFieldsofColumnWithX(i, "^");
-			}
-		}
-		
-		puzzle.printPuzzle();
-	}
-	
 	// after a new tent was set
 	private void updatePuzzle() {
 		int[] tentPos= currentNode.getUpdatedTree().getCurrentTentPosition();
 		updatedPuzzle.getPuzzle()[tentPos[0]][tentPos[1]] = "^";
 	}
-	
-	// within backtrack
-//	private void undoUpdateSolvedPuzzle() {
-//		int[] tentPos= currentNode.getUpdatedTree().getCurrentTentPosition();
-//		puzzle.getPuzzle()[tentPos[0]][tentPos[1]] = "";
-//	}
 	
 	// after backtrack
 	private void createPuzzleFromNode(Node node) {
