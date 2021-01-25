@@ -218,8 +218,8 @@ public class Tents_and_Trees_Solver {
 		for (int i = 0; i < domainSize; i++) {
 			int[] tent = tree.getDomain().get(i);
 			
-			int settableTentsInRow = updatedPuzzle.numberOfTentsThatShouldBeInRow(tent[0]) - updatedPuzzle.countNumberOfXInRow(tent[0], "^") - updatedPuzzle.countNumberOfXInRow(tent[0], "");
-			int settableTentsInColumn = updatedPuzzle.numberOfTentsThatShouldBeInColumn(tent[1]) - updatedPuzzle.countNumberOfXInColumn(tent[1], "^") - updatedPuzzle.countNumberOfXInColumn(tent[1], "");
+			int settableTentsInRow = updatedPuzzle.numberOfTentsThatShouldBeInRow(tent[0]) - updatedPuzzle.countNumberOfXInRow(tent[0], "^");
+			int settableTentsInColumn = updatedPuzzle.numberOfTentsThatShouldBeInColumn(tent[1]) - updatedPuzzle.countNumberOfXInColumn(tent[1], "^");
 			int numberOfSettableTents = Math.min(settableTentsInRow, settableTentsInColumn);
 			
 			if(numberOfSettableTentsOfSelectedTent == null || numberOfSettableTents <= numberOfSettableTentsOfSelectedTent) {
