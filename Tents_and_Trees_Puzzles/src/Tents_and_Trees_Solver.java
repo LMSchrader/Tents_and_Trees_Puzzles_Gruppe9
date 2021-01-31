@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,7 +15,7 @@ public class Tents_and_Trees_Solver {
 	private Stack<Node> currentPath = new Stack<>(); // stack for backtrack
 	private Node currentNode;
 	
-	public static int BACKTRACKCOUNT = 0;
+	public int backtrackcount = 0;
 	
 	
 	public Tents_and_Trees_Solver(String fileName) {
@@ -50,7 +53,7 @@ public class Tents_and_Trees_Solver {
 		}
 		System.out.println("RESULT");
 		updatedPuzzle.printPuzzle();
-		System.out.println("BACKTRACKCOUNT:" + BACKTRACKCOUNT);
+		System.out.println("BACKTRACKCOUNT:" + backtrackcount);
 	}
 	
 	private List<int[]> defineDomain(int[] posTree) {
@@ -242,7 +245,7 @@ public class Tents_and_Trees_Solver {
 			currentNode = currentPath.pop();
 			treePos = currentNode.getUpdatedTree().getPosition();
 			currentNode.undoUpdate();
-			BACKTRACKCOUNT++;
+			backtrackcount++;
 		} while (currentNode.getTree(treePos).getDomain().isEmpty());
 		
 		createPuzzleFromNode(this.currentNode);
@@ -447,4 +450,38 @@ public class Tents_and_Trees_Solver {
 		constraints(updatedPuzzle);
 	}
 
+	public int getBacktrackcount() {
+		return backtrackcount;
+	}
+	
+	// source: https://riptutorial.com/csv/example/27605/reading-and-writing-in-java
+	public void writeBacktrackcountToCsvFile(String separator, String fileName, String puzzleName, String treeSelectHeuristic, String tentSelectHeuristic) {
+		String[] header = new String[] {"puzzle", "tree_select heuristic", "tent_select_heuristic", "backtrackcount"};
+		String[] t = new String[] {puzzleName, treeSelectHeuristic, tentSelectHeuristic, String.valueOf(backtrackcount)};
+		
+		boolean h = new File(fileName).exists();
+		try (FileWriter writer = new FileWriter(fileName, true)){
+	    	if (!h) {
+	    		for (int i = 0; i < header.length; i++) {
+	                writer.append(header[i]);
+	                if(i < (header.length-1))
+	                    writer.append(separator);
+	            }
+	    		writer.append(System.lineSeparator());
+	    	}
+	    	
+
+	        for (int i = 0; i < t.length; i++) {
+	        	writer.append(t[i]);
+	        	if(i < (t.length-1))
+	            	writer.append(separator);
+	        }
+	      	writer.append(System.lineSeparator());
+
+	        writer.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
 }
