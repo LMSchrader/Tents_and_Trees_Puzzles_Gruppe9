@@ -15,9 +15,9 @@ public class Simulation {
 		}
 		
 		for(String fileName : fileNames) {
-			for(int i = 0; i<20; i++) {
+			for(int i = 0; i<1; i++) {
 				Tents_and_Trees_Solver solved = new Tents_and_Trees_Solver("src" + File.separatorChar + "resources" + File.separatorChar + fileName);
-				solved.writeBacktrackcountToCsvFile(" ", "evaluation", fileName, "Random", "Random");
+				solved.writeBacktrackcountToCsvFile(" ", "evaluation", fileName, "MostConstrained", "LeastConstraining", true);
 			}
 		}
 	}

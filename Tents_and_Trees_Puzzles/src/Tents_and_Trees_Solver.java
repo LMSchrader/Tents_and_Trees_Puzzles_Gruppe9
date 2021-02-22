@@ -29,9 +29,11 @@ public class Tents_and_Trees_Solver {
 		constraintsBeforeCreatingFirstNode();
 //		puzzle.printPuzzle();
 		currentNode = createFirstNode(); // define variables 
-		
+		this.puzzle.fillEmptyFieldsWithGrass();
+//		puzzle.printPuzzle();
 		this.updatedPuzzle = this.puzzle.clone();
-		
+		constraintsAfterCreatingFirstNode();
+//		puzzle.printPuzzle();
 		while (currentNode.hasUninstantiatedTrees()) {
 			Tree t = selectTree(); // select variable
 			int[] tentPos = selectTent(t); // select consistent value
@@ -107,11 +109,15 @@ public class Tents_and_Trees_Solver {
 	
 	private void constraintsBeforeCreatingFirstNode() {
 		puzzle.markZeroes(); // constraint:  There are exactly as many tents in each row or column as the number on the side indicates. 
-		puzzle.setGrassForSquaresWithNoAvailableTree(); // constraint:  Each tent must be attached to one tree.
+//		puzzle.setGrassForSquaresWithNoAvailableTree(); // constraint:  Each tent must be attached to one tree.
+	}
+	
+	private void constraintsAfterCreatingFirstNode() {
+		markDomainInPuzzle(this.updatedPuzzle,this.currentNode);
 	}
 	
 	private Tree selectTree() {
-		return selectMostConstrainingTree();
+		return selectTreeWithSmallestDomain();
 	}
 	
 	private Tree selectRandomTree() {
@@ -123,15 +129,26 @@ public class Tents_and_Trees_Solver {
 	private Tree selectTreeWithSmallestDomain() {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
 		int smallestDomain = Integer.MAX_VALUE;
+		int[]treePosMin = new int[]{updatedPuzzle.getRows()+1,updatedPuzzle.getColumns()+1};
 		Tree treeWithSmallestDomain = null;
 		for (Tree tree: trees) {
 			int domainSize = tree.getDomain().size();
-			if (domainSize < smallestDomain)
-				smallestDomain = domainSize;
-				treeWithSmallestDomain = tree;
+			int[] treePos = tree.getPosition();
+			if (domainSize <= smallestDomain) {
+				if (treePos[0] < treePosMin[0]) {
+					if (treePos[1] < treePosMin[1]) {
+						smallestDomain = domainSize;
+						treeWithSmallestDomain = tree;
+						treePosMin = treePos;
+					}
+				}
+			}
 		}
 		return treeWithSmallestDomain;
 	}	
+	
+
+	
 	
 	private Tree selectMostConstrainingTree() {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
@@ -193,6 +210,8 @@ public class Tents_and_Trees_Solver {
 		int domainSize = tree.getDomain().size();
 		int numberOfSettableTentsOfSelectedTent = 0;
 		int[] selectedTent = null;
+		List<int[]> toBeDeleted = new ArrayList<>();
+		int[]tentPosMin = new int[]{updatedPuzzle.getRows()+1,updatedPuzzle.getColumns()+1};
 				
 		for (int i = 0; i < domainSize; i++) {
 			int[] tent = tree.getDomain().get(i);
@@ -203,20 +222,36 @@ public class Tents_and_Trees_Solver {
 			
 			if(numberOfSettableTents >= numberOfSettableTentsOfSelectedTent) {
 				if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
-					numberOfSettableTentsOfSelectedTent = numberOfSettableTents;
-					selectedTent = tent;
+					if (tent[0] < tentPosMin[0]) {
+						if (tent[1] < tentPosMin[1]) {
+							numberOfSettableTentsOfSelectedTent = numberOfSettableTents;
+							selectedTent = tent;
+							tentPosMin = tent;
+						}
+					}
+
 				} else {
-					tree.deleteFromDomain(tent);
+					toBeDeleted.add(tent);
 				}
 			}
 		}
+		
+		if (!toBeDeleted.isEmpty()) {
+			for (int[] toBeDeletedElement : toBeDeleted) {
+				tree.deleteFromDomain(toBeDeletedElement);
+			}
+		}
+		
 		return selectedTent;
 	}
+
+	
 	
 	private int[] selectMostConstrainingTent(Tree tree) {
 		int domainSize = tree.getDomain().size();
 		Integer numberOfSettableTentsOfSelectedTent = null;
 		int[] selectedTent = null;
+		List<int[]> toBeDeleted = new ArrayList<>();
 		
 		for (int i = 0; i < domainSize; i++) {
 			int[] tent = tree.getDomain().get(i);
@@ -230,10 +265,17 @@ public class Tents_and_Trees_Solver {
 					numberOfSettableTentsOfSelectedTent = numberOfSettableTents;
 					selectedTent = tent;
 				} else {
-					tree.deleteFromDomain(tent);
+					toBeDeleted.add(tent);
 				}
 			}
 		}
+		
+		if (!toBeDeleted.isEmpty()) {
+			for (int[] toBeDeletedElement : toBeDeleted) {
+				tree.deleteFromDomain(toBeDeletedElement);
+			}
+		}
+		
 		return selectedTent;
 	}
 	
@@ -254,7 +296,7 @@ public class Tents_and_Trees_Solver {
 	private void update(Tree t, int[] tentPos) {
 		currentNode.update(t, tentPos);
 		updatePuzzle();	
-		constraints(updatedPuzzle);
+		constraints(updatedPuzzle, tentPos);
 	}
 	
 	private void constraintPropagation() {
@@ -315,74 +357,71 @@ public class Tents_and_Trees_Solver {
 	private void constraints(Puzzle puzzle) {
 		setGrassAroundASquareWithATent(puzzle);
 		fillRowsAndCollumnsWithGrassIfAllTentsHaveBeenSet(puzzle);
-		setGrassOnAllEmptyFieldsIfFieldIsNotInAnyDomainOfUninstantiatedTrees(puzzle);
+//		setGrassOnAllEmptyFieldsIfFieldIsNotInAnyDomainOfUninstantiatedTrees(puzzle);
+	}
+	
+	private void constraints(Puzzle puzzle, int[] tentPos) {
+		List<int[]> tentPositions =new ArrayList<>() ;
+		tentPositions.add(tentPos);
+		setGrassAroundASquareWithATent(puzzle, tentPositions);
+		fillRowsAndCollumnsWithGrassIfAllTentsHaveBeenSet(puzzle, tentPos);
 	}
 	
 	// constraint:  No two tents may stand immediately next to each other, not even diagonally. 
 	private void setGrassAroundASquareWithATent(Puzzle puzzle) {
+		List<int[]> tents = puzzle.getTentPosistions();
+		setGrassAroundASquareWithATent(puzzle, tents);
+	}
+	
+	private void setGrassAroundASquareWithATent(Puzzle puzzle, List<int[]> tentPositions) {
 		String[][] p = puzzle.getPuzzle();
-		for (int i = 1; i < puzzle.getRows(); i++) {
-			for (int j = 1; j < puzzle.getColumns(); j++) {
-				if (!p[i][j].equals("")) {
-					continue;
+		for (int[] tentPos : tentPositions) {
+			if (tentPos[0] > 1) {
+				if (p[tentPos[0]-1][tentPos[1]].equals("")) {
+					p[tentPos[0]-1][tentPos[1]] = "g";
 				}
-				
-				if (i > 1) {
-					if (p[i-1][j].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
+			}
+			
+			if (tentPos[0] < puzzle.getRows() - 1) {
+				if (p[tentPos[0]+1][tentPos[1]].equals("")) {
+					p[tentPos[0]+1][tentPos[1]] = "g";
 				}
-				
-				if (i < puzzle.getRows() - 1) {
-					if (p[i+1][j].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
+			}
+
+			if (tentPos[1] > 1) {
+				if (p[tentPos[0]][tentPos[1]-1].equals("")) {
+					p[tentPos[0]][tentPos[1]-1] = "g";
 				}
-				
-				if (j > 1) {
-					if (p[i][j-1].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
+			}		
+			
+			if (tentPos[1] < puzzle.getColumns() - 1) {
+				if (p[tentPos[0]][tentPos[1]+1].equals("")) {
+					p[tentPos[0]][tentPos[1]+1] = "g";
 				}
-				
-				if (j < puzzle.getColumns() - 1) {
-					if (p[i][j+1].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
+			}
+			
+			if (tentPos[0] > 1 && tentPos[1] > 1) {
+				if (p[tentPos[0]-1][tentPos[1]-1].equals("")) {
+					p[tentPos[0]-1][tentPos[1]-1] = "g";
 				}
-				
-				if (i > 1 && j > 1) {
-					if (p[i-1][j-1].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
+			}
+			
+			if (tentPos[0] < puzzle.getRows() - 1 && tentPos[1] > 1) {
+				if (p[tentPos[0]+1][tentPos[1]-1].equals("")) {
+					p[tentPos[0]+1][tentPos[1]-1] = "g";
 				}
-				
-				if (i < puzzle.getRows() - 1 && j > 1) {
-					if (p[i+1][j-1].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
+			}
+			
+			if (tentPos[0] < puzzle.getRows() - 1 && tentPos[1] < puzzle.getColumns() - 1) {
+				if (p[tentPos[0]+1][tentPos[1]+1].equals("")) {
+					p[tentPos[0]+1][tentPos[1]+1] = "g";
 				}
-				
-				if (i < puzzle.getRows() - 1 && j < puzzle.getColumns() - 1) {
-					if (p[i+1][j+1].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
+			}
+			
+			if (tentPos[0] > 1 && tentPos[1] < puzzle.getColumns() - 1) {
+				if (p[tentPos[0]-1][tentPos[1]+1].equals("")) {
+					p[tentPos[0]-1][tentPos[1]+1] = "g";
 				}
-				
-				if (i > 1 && j < puzzle.getColumns() - 1) {
-					if (p[i-1][j+1].equals("^")) {
-						p[i][j] = "g";
-						continue;
-					}
-				}
-				
 			}
 		}
 	}
@@ -402,28 +441,33 @@ public class Tents_and_Trees_Solver {
 		}
 	}
 	
+	private void fillRowsAndCollumnsWithGrassIfAllTentsHaveBeenSet(Puzzle puzzle, int[] tentPos) {
+			if (puzzle.countNumberOfXInRow(tentPos[0], "^") >= puzzle.numberOfTentsThatShouldBeInRow(tentPos[0])) {
+				puzzle.fillUnknownFieldsofRowWithX(tentPos[0], "g");
+			}
+		
+			if (puzzle.countNumberOfXInColumn(tentPos[1], "^") >= puzzle.numberOfTentsThatShouldBeInColumn(tentPos[1])) {
+				puzzle.fillUnknownFieldsofColumnWithX(tentPos[1], "g");
+			}
+	}
+	
 	// constraint:  Each tree must be attached to exactly one tent.
 	private void setGrassOnAllEmptyFieldsIfFieldIsNotInAnyDomainOfUninstantiatedTrees(Puzzle puzzle) {
+		List<Tree> allUninstantiatedTrees = currentNode.getUninstantiatedTrees();
 		for (int i = 1; i < puzzle.getRows(); i++) {
 			for (int j = 1; j < puzzle.getColumns(); j++) {
-				setGrassOnEmptyFieldIfFieldIsNotInAnyDomainOfUninstantiatedTrees(puzzle, new int[] {i,j});
+				setGrassOnEmptyFieldIfFieldIsNotInAnyDomainOfUninstantiatedTrees(puzzle, new int[] {i,j}, allUninstantiatedTrees);
 			}
 		}
 	}
 	
-	private void setGrassOnEmptyFieldIfFieldIsNotInAnyDomainOfUninstantiatedTrees(Puzzle puzzle, int[] domainPos) {
+	private void setGrassOnEmptyFieldIfFieldIsNotInAnyDomainOfUninstantiatedTrees(Puzzle puzzle, int[] domainPos, List<Tree> allUninstantiatedTrees) {
 		if (puzzle.getPuzzle() [domainPos[0]] [domainPos[1]].equals("")) {
-			List<Tree> allUninstantiatedTrees = currentNode.getUninstantiatedTrees();
 			for (Tree t : allUninstantiatedTrees) {
-				if (Arrays.equals(t.getPosition(),new int[] {domainPos[0], domainPos[1]-1}) ||
-					Arrays.equals(t.getPosition(),new int[] {domainPos[0], domainPos[1]+1}) ||
-					Arrays.equals(t.getPosition(),new int[] {domainPos[0]-1, domainPos[1]}) ||
-					Arrays.equals(t.getPosition(),new int[] {domainPos[0]+1, domainPos[1]})) {
-						for (int[] domainElement : t.getDomain()) {
-							if (Arrays.equals(domainPos, domainElement)) {
-								return;
-							}
-						}
+				for (int[] domainElement : t.getDomain()) {
+					if (Arrays.equals(domainPos, domainElement)) {
+						return;
+					}
 				}
 			}
 			updatedPuzzle.getPuzzle() [domainPos[0]] [domainPos[1]] = "g";
@@ -434,30 +478,45 @@ public class Tents_and_Trees_Solver {
 	private void updatePuzzle() {
 		int[] tentPos= currentNode.getUpdatedTree().getCurrentTentPosition();
 		updatedPuzzle.getPuzzle()[tentPos[0]][tentPos[1]] = "^";
+		updatedPuzzle.addTentPosition(tentPos);
 	}
 	
 	// after backtrack
 	private void createPuzzleFromNode(Node node) {
 		this.updatedPuzzle = puzzle.clone();
+		markDomainInPuzzle(this.updatedPuzzle, node);
+		
 		String[][] p = this.updatedPuzzle.getPuzzle();
 		
 		for (Entry<int[], Tree> s : node.getAllTrees().entrySet()) {
 			int[] tentPos = s.getValue().getCurrentTentPosition();
 			if (tentPos != null) {
 				p[tentPos[0]][tentPos[1]] = "^";
+				updatedPuzzle.addTentPosition(tentPos);
 			}
 		}
 		constraints(updatedPuzzle);
+
 	}
 
+	public void markDomainInPuzzle(Puzzle puzzle, Node node) {
+		String[][] p = puzzle.getPuzzle();
+		
+		for (Entry<int[], Tree> s : node.getAllTrees().entrySet()) {
+			for(int[] domainElement : s.getValue().getDomain()) {
+				p[domainElement[0]][domainElement[1]] = "";
+			}
+		}
+	}
+	
 	public int getBacktrackcount() {
 		return backtrackcount;
 	}
 	
 	// source: https://riptutorial.com/csv/example/27605/reading-and-writing-in-java
-	public void writeBacktrackcountToCsvFile(String separator, String fileName, String puzzleName, String treeSelectHeuristic, String tentSelectHeuristic) {
-		String[] header = new String[] {"puzzle", "tree_select heuristic", "tent_select_heuristic", "backtrackcount"};
-		String[] t = new String[] {puzzleName, treeSelectHeuristic, tentSelectHeuristic, String.valueOf(backtrackcount)};
+	public void writeBacktrackcountToCsvFile(String separator, String fileName, String puzzleName, String treeSelectHeuristic, String tentSelectHeuristic, boolean constraintPropagation) {
+		String[] header = new String[] {"puzzle", "tree_select heuristic", "tent_select_heuristic", "contraint_Propagation", "backtrackcount"};
+		String[] t = new String[] {puzzleName, treeSelectHeuristic, tentSelectHeuristic, String.valueOf(constraintPropagation), String.valueOf(backtrackcount)};
 		
 		boolean h = new File(fileName).exists();
 		try (FileWriter writer = new FileWriter(fileName, true)){

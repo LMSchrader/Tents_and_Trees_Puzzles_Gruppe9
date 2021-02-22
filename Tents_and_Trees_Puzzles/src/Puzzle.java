@@ -11,6 +11,7 @@ public class Puzzle {
 	// gras: "g"
 	// unknown: ""
 	private String[][] puzzle;
+	private List<int[]> tentPosistions = new ArrayList<>();
 	
 	public Puzzle(String fileName) {
 		setPuzzle(fileName);
@@ -20,6 +21,27 @@ public class Puzzle {
 		this.puzzle = puzzle;
 	}
 	
+	private Puzzle(String[][] puzzle, List<int[]> tentPositions) {
+		this.puzzle = puzzle;
+		this.tentPosistions = tentPositions;
+	}
+	
+	public List<int[]> getTentPosistions() {
+		return tentPosistions;
+	}
+	
+	public void addTentPosition(int[] tentPos) {
+		tentPosistions.add(tentPos);
+	}
+	
+	private List<int[]> cloneTentPositions() {
+		List<int[]> clonedTentPositions = new ArrayList<>();
+		for (int[] entry : this.tentPosistions) {
+			clonedTentPositions.add(entry);
+		}
+		return clonedTentPositions;
+	}
+
 	public void setPuzzle(String fileName) {
 		List<String[]> p = readFromCsvFile(",", fileName);
 		
@@ -197,7 +219,8 @@ public class Puzzle {
 				p[i][j] = puzzle[i][j];
 			}
 		}
-		return new Puzzle(p);
+		List<int[]> clonedTentPositions = cloneTentPositions();
+		return new Puzzle(p,clonedTentPositions);
 	}
 	
 	public void markZeroes() {
@@ -257,6 +280,12 @@ public class Puzzle {
 				}
 				puzzle[i][j] = "g";
 			}
+		}
+	}
+	
+	public void fillEmptyFieldsWithGrass() {
+		for (int i = 1; i < getRows(); i++) {
+			fillUnknownFieldsofRowWithX(i,"g");
 		}
 	}
 }

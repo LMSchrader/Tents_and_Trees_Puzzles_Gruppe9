@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,13 +27,16 @@ public class Node {
 		return false;
 	}
 	
-	public List<Tree> getUninstantiatedTrees() {
+	public List<Tree> getUninstantiatedTrees() { 
 		List<Tree> treeList = new ArrayList<>();
 		for (Map.Entry<int[], Tree> entry : allTrees.entrySet()) {
 			if (entry.getValue().getCurrentTentPosition() == null) {
 				treeList.add(entry.getValue());
 			}
 		}
+		
+		Collections.sort(treeList,TreeComperator.INSTANCE);
+		
 		return treeList;
 	}
 	
