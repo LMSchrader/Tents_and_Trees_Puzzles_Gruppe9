@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ public class Tents_and_Trees_Solver {
 	private Puzzle updatedPuzzle;
 	private Stack<Node> currentPath = new Stack<>(); // stack for backtrack
 	private Node currentNode;
+	private List<int[]> randomTreeList;
 	
 	public int backtrackcount = 0;
 	
@@ -109,7 +111,6 @@ public class Tents_and_Trees_Solver {
 	
 	private void constraintsBeforeCreatingFirstNode() {
 		puzzle.markZeroes(); // constraint:  There are exactly as many tents in each row or column as the number on the side indicates. 
-//		puzzle.setGrassForSquaresWithNoAvailableTree(); // constraint:  Each tent must be attached to one tree.
 	}
 	
 	private void constraintsAfterCreatingFirstNode() {
@@ -117,38 +118,45 @@ public class Tents_and_Trees_Solver {
 	}
 	
 	private Tree selectTree() {
-		return selectTreeWithSmallestDomain();
+		return selectRandomTree();
 	}
 	
 	private Tree selectRandomTree() {
-		List<Tree> trees = currentNode.getUninstantiatedTrees();
-		Tree tree = trees.get((int)(Math.random() * ((trees.size() - 1) + 1)));
-		return tree;
+		if (this.randomTreeList == null) {
+			initiateRandomTreeList();
+		} 
+		
+		Map<int[], Tree> allTrees = currentNode.getAllTrees();
+		for (int[] treePos: this.randomTreeList) {
+			if(allTrees.get(treePos).getCurrentTentPosition() == null) {
+				return allTrees.get(treePos);
+			}
+		}
+		
+		return null;
+	}
+	
+	private void initiateRandomTreeList() {
+		this.randomTreeList = new ArrayList<>();
+		for (Map.Entry<int[], Tree> entry : currentNode.getAllTrees().entrySet()) {
+			this.randomTreeList.add(entry.getValue().getPosition());
+		}
+		Collections.shuffle(randomTreeList);
 	}
 	
 	private Tree selectTreeWithSmallestDomain() {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
 		int smallestDomain = Integer.MAX_VALUE;
-		int[]treePosMin = new int[]{updatedPuzzle.getRows()+1,updatedPuzzle.getColumns()+1};
 		Tree treeWithSmallestDomain = null;
 		for (Tree tree: trees) {
 			int domainSize = tree.getDomain().size();
-			int[] treePos = tree.getPosition();
 			if (domainSize <= smallestDomain) {
-				if (treePos[0] < treePosMin[0]) {
-					if (treePos[1] < treePosMin[1]) {
 						smallestDomain = domainSize;
 						treeWithSmallestDomain = tree;
-						treePosMin = treePos;
-					}
-				}
 			}
 		}
 		return treeWithSmallestDomain;
 	}	
-	
-
-	
 	
 	private Tree selectMostConstrainingTree() {
 		List<Tree> trees = currentNode.getUninstantiatedTrees();
@@ -211,7 +219,6 @@ public class Tents_and_Trees_Solver {
 		int numberOfSettableTentsOfSelectedTent = 0;
 		int[] selectedTent = null;
 		List<int[]> toBeDeleted = new ArrayList<>();
-		int[]tentPosMin = new int[]{updatedPuzzle.getRows()+1,updatedPuzzle.getColumns()+1};
 				
 		for (int i = 0; i < domainSize; i++) {
 			int[] tent = tree.getDomain().get(i);
@@ -222,14 +229,8 @@ public class Tents_and_Trees_Solver {
 			
 			if(numberOfSettableTents >= numberOfSettableTentsOfSelectedTent) {
 				if (updatedPuzzle.getPuzzle()[tent[0]][tent[1]].equals("")) { // if value is consistent
-					if (tent[0] < tentPosMin[0]) {
-						if (tent[1] < tentPosMin[1]) {
 							numberOfSettableTentsOfSelectedTent = numberOfSettableTents;
 							selectedTent = tent;
-							tentPosMin = tent;
-						}
-					}
-
 				} else {
 					toBeDeleted.add(tent);
 				}
@@ -244,8 +245,6 @@ public class Tents_and_Trees_Solver {
 		
 		return selectedTent;
 	}
-
-	
 	
 	private int[] selectMostConstrainingTent(Tree tree) {
 		int domainSize = tree.getDomain().size();
