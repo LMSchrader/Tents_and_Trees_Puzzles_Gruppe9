@@ -450,16 +450,6 @@ public class Tents_and_Trees_Solver {
 			}
 	}
 	
-	// constraint:  Each tree must be attached to exactly one tent.
-	private void setGrassOnAllEmptyFieldsIfFieldIsNotInAnyDomainOfUninstantiatedTrees(Puzzle puzzle) {
-		List<Tree> allUninstantiatedTrees = currentNode.getUninstantiatedTrees();
-		for (int i = 1; i < puzzle.getRows(); i++) {
-			for (int j = 1; j < puzzle.getColumns(); j++) {
-				setGrassOnEmptyFieldIfFieldIsNotInAnyDomainOfUninstantiatedTrees(puzzle, new int[] {i,j}, allUninstantiatedTrees);
-			}
-		}
-	}
-	
 	private void setGrassOnEmptyFieldIfFieldIsNotInAnyDomainOfUninstantiatedTrees(Puzzle puzzle, int[] domainPos, List<Tree> allUninstantiatedTrees) {
 		if (puzzle.getPuzzle() [domainPos[0]] [domainPos[1]].equals("")) {
 			for (Tree t : allUninstantiatedTrees) {

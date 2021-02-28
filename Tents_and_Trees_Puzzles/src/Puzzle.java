@@ -17,10 +17,6 @@ public class Puzzle {
 		setPuzzle(fileName);
 	}
 	
-	private Puzzle(String[][] puzzle) {
-		this.puzzle = puzzle;
-	}
-	
 	private Puzzle(String[][] puzzle, List<int[]> tentPositions) {
 		this.puzzle = puzzle;
 		this.tentPosistions = tentPositions;
