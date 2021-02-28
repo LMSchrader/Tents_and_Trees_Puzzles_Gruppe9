@@ -450,19 +450,6 @@ public class Tents_and_Trees_Solver {
 			}
 	}
 	
-	private void setGrassOnEmptyFieldIfFieldIsNotInAnyDomainOfUninstantiatedTrees(Puzzle puzzle, int[] domainPos, List<Tree> allUninstantiatedTrees) {
-		if (puzzle.getPuzzle() [domainPos[0]] [domainPos[1]].equals("")) {
-			for (Tree t : allUninstantiatedTrees) {
-				for (int[] domainElement : t.getDomain()) {
-					if (Arrays.equals(domainPos, domainElement)) {
-						return;
-					}
-				}
-			}
-			updatedPuzzle.getPuzzle() [domainPos[0]] [domainPos[1]] = "g";
-		}
-	}
-	
 	// after a new tent was set
 	private void updatePuzzle() {
 		int[] tentPos= currentNode.getUpdatedTree().getCurrentTentPosition();
