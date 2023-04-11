@@ -5,10 +5,10 @@ and the following selection heuristics:
 # Tree selection heuristics
 - Random
 - Most constrained variable
-- Least constrained variable
+- Most constraining variable
 
 
 # Tent selection heuristics
 - Random
-- Most constrained variable
-- Least constrained variable
+- Least constraining value
+- Most constraining value
